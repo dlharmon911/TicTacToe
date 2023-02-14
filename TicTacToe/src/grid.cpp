@@ -18,7 +18,6 @@ Grid::Grid() : m_grid(0), m_cell(), m_sprites()
 	//testing
 	this->setCell(this->m_grid, 0, Grid::CellType::Cell_O);
 	this->setCell(this->m_grid, 4, Grid::CellType::Cell_X);
-	this->setCell(this->m_grid, 8, Grid::CellType::Cell_O);
 }
 
 Grid::~Grid()

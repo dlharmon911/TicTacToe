@@ -56,19 +56,21 @@ namespace TicTacToe
 		*/
 		void mouseHover(int32_t mouse_x, int32_t mouse_y);
 
-		/**
-		Evaluate the value of the grid
-		@param none
-		@return 0 if no win or a tie, 10 on X win, -10 on O win
-		*/
-		static int32_t evaluateGrid(int32_t grid);
-
 		enum class CellType
 		{
 			Cell_Empty,
 			Cell_X,
 			Cell_O
 		};
+
+	private:
+
+		/**
+		Evaluate the value of the grid
+		@param none
+		@return 0 if no win or a tie, 10 on X win, -10 on O win
+		*/
+		static int32_t evaluateGrid(int32_t grid);
 
 		/**
 		Sets the cell value
@@ -84,9 +86,6 @@ namespace TicTacToe
 		@return cell type
 		*/
 		static Grid::CellType getCell(int32_t grid, int32_t cellNumber);
-
-
-	private:
 
 		enum class CellStatus
 		{
