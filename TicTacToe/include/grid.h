@@ -1,27 +1,30 @@
 #ifndef _GRID_H_
 #define _GRID_H_
 
-#include "common.h"
+#include <allegro5/allegro.h>
 #include "cell.h"
 
 namespace TicTacToe
 {
 	class Grid
 	{
-	public:
+	private:
 		/**
 		Constructor for Grid
 		@param none
 		@return none
 		*/
 		Grid();
-
+		Grid(const Grid& grid) = delete;
+		Grid& operator = (const Grid& grid) = delete;
+	public:
 		/**
-		Copy constructor for Grid
-		@param cell - Grid to copy
-		@return none
+		Resize grid and calculate coords of cell in the grid
+		@param width - width of display
+		@param height - height of display
+		@return Grid on success, nullptr on failure
 		*/
-		Grid(const Grid& grid);
+		static Grid* generateGrid(int32_t width, int32_t height);
 
 		/**
 		Deconstructor for Grid
@@ -30,21 +33,6 @@ namespace TicTacToe
 		@return none
 		*/
 		~Grid();
-
-		/**
-		Assigment overload
-		@param grid - Grid to copy
-		@return this grid
-		*/
-		Grid& operator = (const Grid& grid);
-
-		/**
-		Calculates coords of cell in the grid
-		@param width - width of display
-		@param height - height of display
-		@return 0 on success, negative value on failure
-		*/
-		int32_t generateGrid(int32_t width, int32_t height);
 
 		/**
 		Draw the grid to the display
@@ -76,16 +64,32 @@ namespace TicTacToe
 		*/
 		int32_t evaluateGrid() const;
 
+
+	private:
+
+		/**
+		Draw the cell to the display
+		@param cell - Cell to be drawn
+		@return none
+		*/
+		void drawCell(const Cell& cell) const;
+
+		/**
+		Generate the X and O sprites based on given cell width and height
+		@param cell_width - width of the cell
+		@param cell_height - height of the cell
+		@return true on success
+		*/
+		bool generateSprites(int32_t cell_width, int32_t cell_height);
+
 		// number of cells in a row
 		static const int32_t grid_width;
 
 		// number of cells in a column
 		static const int32_t grid_height;
 
-		// background color of the grid
-		static const Allegro::Color background;
-	private:
 		Cell m_cell[9];
+		ALLEGRO_BITMAP* m_sprites[2];
 	};
 }
 

@@ -4,7 +4,6 @@
 #include <allegro5/allegro.h>
 #include <vector>
 #include <string>
-#include "common.h"
 #include "grid.h"
 #include "mouse.h"
 
@@ -79,13 +78,13 @@ namespace TicTacToe
 		*/
 		void processInput();
 
-		Allegro::Display m_display;
-		Allegro::EventQueue m_queue;
-		Allegro::Timer m_timer;
+		ALLEGRO_DISPLAY* m_display;
+		ALLEGRO_EVENT_QUEUE* m_queue;
+		ALLEGRO_TIMER* m_timer;
 		bool m_kill;
 		bool m_dirty;
 		int32_t m_counter;
-		Grid m_grid;
+		Grid* m_grid;
 		Mouse m_mouse;
 
 		static const int32_t SCREEN_WIDTH;

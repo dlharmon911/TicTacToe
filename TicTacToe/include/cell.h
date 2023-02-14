@@ -2,7 +2,6 @@
 #define _CELL_H_
 
 #include <cstdint>
-#include "common.h"
 
 namespace TicTacToe
 {
@@ -55,27 +54,6 @@ namespace TicTacToe
 		*/
 		void mouseHover(int32_t mouse_x, int32_t mouse_y);
 
-		/**
-		Draw the cell to the display
-		@param none
-		@return none
-		*/
-		void drawCell() const;
-
-		/**
-		Generate the X and O sprites based on given cell width and height
-		@param cell_width - width of the cell
-		@param cell_height - height of the cell
-		@return true on success
-		*/
-		static bool generateSprites(int32_t cell_width, int32_t cell_height);
-
-		/**
-		Free memory of sprites
-		@param none
-		@return true if any sprites were freed
-		*/
-		static bool freeSprites();
 
 		enum CellType
 		{
@@ -84,27 +62,11 @@ namespace TicTacToe
 			Cell_O
 		};
 
-		enum Colors
-		{
-			COLOR_FACE,
-			COLOR_LIGHT,
-			COLOR_DARK,
-			COLOR_HOVER,
-			COLOR_X_FACE,
-			COLOR_X_BORDER,
-			COLOR_O_FACE,
-			COLOR_O_BORDER,
-			COLOR_COUNT
-		};
-
 		enum CellStatus
 		{
 			CELL_NORMAL,
 			CELL_HOVER
 		};
-
-		static const Allegro::Color colors[Cell::COLOR_COUNT];
-		static Allegro::Bitmap m_sprites[2];
 
 		friend class Grid;
 

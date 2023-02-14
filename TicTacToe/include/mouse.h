@@ -1,7 +1,7 @@
 #ifndef _MOUSE_H_
 #define _MOUSE_H_
 
-#include "common.h"
+#include <cstdint>
 
 namespace TicTacToe
 {
