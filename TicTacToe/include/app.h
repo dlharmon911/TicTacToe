@@ -78,6 +78,16 @@ namespace TicTacToe
 		*/
 		void processInput();
 
+		enum class GameState
+		{
+			StateUndefined,
+			StateInitializing,
+			StateShuttingdown,
+			StatePlayerX,
+			StatePlayerO,
+			StateGameOver
+		};
+
 		ALLEGRO_DISPLAY* m_display;
 		ALLEGRO_EVENT_QUEUE* m_queue;
 		ALLEGRO_TIMER* m_timer;
@@ -86,6 +96,7 @@ namespace TicTacToe
 		int32_t m_counter;
 		Grid* m_grid;
 		Mouse m_mouse;
+		GameState m_gameState;
 
 		static const int32_t SCREEN_WIDTH;
 		static const int32_t SCREEN_HEIGHT;

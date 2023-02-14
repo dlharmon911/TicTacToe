@@ -2,7 +2,6 @@
 #define _GRID_H_
 
 #include <allegro5/allegro.h>
-#include "cell.h"
 
 namespace TicTacToe
 {
@@ -62,17 +61,38 @@ namespace TicTacToe
 		@param none
 		@return 0 if no win or a tie, 10 on X win, -10 on O win
 		*/
-		int32_t evaluateGrid() const;
+		static int32_t evaluateGrid(int32_t grid);
+
+		enum class CellType
+		{
+			Cell_Empty,
+			Cell_X,
+			Cell_O
+		};
+
+		/**
+		Sets the cell value
+		@param cellNumber - number of the cell to set
+		@param type - cell type
+		@return none
+		*/
+		static void setCell(int32_t& grid, int32_t cellNumber, Grid::CellType type);
+
+		/**
+		Gets the cell value
+		@param cellNumber - number of the cell to get
+		@return cell type
+		*/
+		static Grid::CellType getCell(int32_t grid, int32_t cellNumber);
 
 
 	private:
 
-		/**
-		Draw the cell to the display
-		@param cell - Cell to be drawn
-		@return none
-		*/
-		void drawCell(const Cell& cell) const;
+		enum class CellStatus
+		{
+			CELL_NORMAL,
+			CELL_HOVER
+		};
 
 		/**
 		Generate the X and O sprites based on given cell width and height
@@ -88,6 +108,16 @@ namespace TicTacToe
 		// number of cells in a column
 		static const int32_t grid_height;
 
+		typedef struct Cell
+		{
+			int32_t x;
+			int32_t y;
+			int32_t width;
+			int32_t height;
+			CellStatus status;
+		} Cell;
+
+		int32_t m_grid;
 		Cell m_cell[9];
 		ALLEGRO_BITMAP* m_sprites[2];
 	};

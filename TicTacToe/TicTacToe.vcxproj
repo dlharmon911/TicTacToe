@@ -150,7 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app.cpp" />
-    <ClCompile Include="src\cell.cpp" />
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mouse.cpp" />
@@ -158,7 +157,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\app.h" />
-    <ClInclude Include="include\cell.h" />
     <ClInclude Include="include\theme.h" />
     <ClInclude Include="include\grid.h" />
     <ClInclude Include="include\mouse.h" />

@@ -10,10 +10,15 @@ using namespace TicTacToe;
 const int32_t Grid::grid_width = 3;
 const int32_t Grid::grid_height = 3;
 
-Grid::Grid() : m_cell(), m_sprites()
+Grid::Grid() : m_grid(0), m_cell(), m_sprites()
 {
 	this->m_sprites[0] = nullptr;
 	this->m_sprites[1] = nullptr;
+
+	//testing
+	this->setCell(this->m_grid, 0, Grid::CellType::Cell_O);
+	this->setCell(this->m_grid, 4, Grid::CellType::Cell_X);
+	this->setCell(this->m_grid, 8, Grid::CellType::Cell_O);
 }
 
 Grid::~Grid()
@@ -34,7 +39,6 @@ Grid* Grid::generateGrid(int32_t width, int32_t height)
 
 	if (grid)
 	{
-
 		enum Padding
 		{
 			PADDING_TOP,
@@ -74,17 +78,13 @@ Grid* Grid::generateGrid(int32_t width, int32_t height)
 				int x = cell_padding[PADDING_LEFT] + i * (cell_spacing[SPACING_HORIZONTAL] + cell_width);
 				int y = cell_padding[PADDING_TOP] + j * (cell_spacing[SPACING_VERTICAL] + cell_height);
 
-				grid->m_cell[index].m_value = Cell::Cell_Empty;
-				grid->m_cell[index].m_x = x;
-				grid->m_cell[index].m_y = y;
-				grid->m_cell[index].m_width = cell_width;
-				grid->m_cell[index].m_height = cell_height;
-				grid->m_cell[index].m_status = 0;
+				grid->m_cell[index].x = x;
+				grid->m_cell[index].y = y;
+				grid->m_cell[index].width = cell_width;
+				grid->m_cell[index].height = cell_height;
+				grid->m_cell[index].status = Grid::CellStatus::CELL_NORMAL;
 			}
 		}
-
-		grid->m_cell[0].m_value = Cell::Cell_O;
-		grid->m_cell[4].m_value = Cell::Cell_X;
 
 		if (!grid->generateSprites(cell_width, cell_height))
 		{
@@ -98,27 +98,43 @@ Grid* Grid::generateGrid(int32_t width, int32_t height)
 
 void Grid::drawGrid() const
 {
+	const float LINE_THICKNESS = 2.0f;
+
 	al_clear_to_color(Theme::getColor(Theme::COLOR_BACKGROUND));
 
-	for (int32_t j = 0; j < Grid::grid_height; ++j)
+	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
 	{
-		for (int32_t i = 0; i < Grid::grid_width; ++i)
+		int32_t face = Theme::COLOR_FACE;
+
+		if (this->m_cell[index].status == Grid::CellStatus::CELL_HOVER)
 		{
-			this->drawCell(this->m_cell[i + j * Grid::grid_width]);
+			face = Theme::COLOR_HOVER;
+		}
+
+		al_draw_filled_rectangle(this->m_cell[index].x, this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(face));
+		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
+		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
+		al_draw_line(this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
+		al_draw_line((this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
+
+		if (this->getCell(this->m_grid, index) != Grid::CellType::Cell_Empty)
+		{
+			al_draw_bitmap(Grid::m_sprites[int32_t(this->getCell(this->m_grid, index)) - 1], this->m_cell[index].x, this->m_cell[index].y, 0);
 		}
 	}
 }
 
 int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y)
 {
-	for (int32_t j = 0; j < Grid::grid_height; ++j)
+	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
 	{
-		for (int32_t i = 0; i < Grid::grid_width; ++i)
+		if (this->getCell(this->m_grid, index) == Grid::CellType::Cell_Empty &&
+			mouse_x >= this->m_cell[index].x &&
+			mouse_x < (this->m_cell[index].x + this->m_cell[index].width) &&
+			mouse_y >= this->m_cell[index].y &&
+			mouse_y < (this->m_cell[index].y + this->m_cell[index].height))
 		{
-			if (this->m_cell[i + j * Grid::grid_width].isInsideCell(mouse_x, mouse_y))
-			{
-				return (i + j * Grid::grid_width);
-			}
+			return index;
 		}
 	}
 
@@ -127,16 +143,22 @@ int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y)
 
 void Grid::mouseHover(int32_t mouse_x, int32_t mouse_y)
 {
-	for (int32_t j = 0; j < Grid::grid_height; ++j)
+	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
 	{
-		for (int32_t i = 0; i < Grid::grid_width; ++i)
+		this->m_cell[index].status = Grid::CellStatus::CELL_NORMAL;
+
+		if (this->getCell(this->m_grid, index) == Grid::CellType::Cell_Empty &&
+				mouse_x >= this->m_cell[index].x &&
+				mouse_x < (this->m_cell[index].x + this->m_cell[index].width) &&
+				mouse_y >= this->m_cell[index].y &&
+				mouse_y < (this->m_cell[index].y + this->m_cell[index].height))
 		{
-			this->m_cell[i + j * Grid::grid_width].mouseHover(mouse_x, mouse_y);
+			this->m_cell[index].status = Grid::CellStatus::CELL_HOVER;
 		}
 	}
 }
 
-int32_t Grid::evaluateGrid() const
+int32_t Grid::evaluateGrid(int32_t grid)
 {
 	const int32_t numberOfWins = 8;
 	
@@ -166,34 +188,12 @@ int32_t Grid::evaluateGrid() const
 	// if all 3 cells in each combination ANDed together then they match and it is a win
 	for (int32_t i = 0; i < numberOfWins; ++i)
 	{
-		if (this->m_cell[triplets[i].p1].m_value & 
-			this->m_cell[triplets[i].p2].m_value & 
-			this->m_cell[triplets[i].p3].m_value) return winOutcomes[this->m_cell[triplets[i].p1].m_value];
+		if (int32_t(Grid::getCell(grid, triplets[i].p1)) & 
+			int32_t(Grid::getCell(grid, triplets[i].p2)) &
+			int32_t(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[int32_t(Grid::getCell(grid, triplets[i].p1))];
 	}
 
 	return 0;
-}
-
-void Grid::drawCell(const Cell& cell) const
-{
-	const float LINE_THICKNESS = 2.0f;
-	int32_t face = Theme::COLOR_FACE;
-
-	if (cell.m_status == Cell::CELL_HOVER)
-	{
-		face = Theme::COLOR_HOVER;
-	}
-
-	al_draw_filled_rectangle(cell.m_x, cell.m_y, (cell.m_x + cell.m_width - 1), (cell.m_y + cell.m_height - 1), Theme::getColor(face));
-	al_draw_line(cell.m_x, cell.m_y, (cell.m_x + cell.m_width - 1), cell.m_y, Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
-	al_draw_line(cell.m_x, cell.m_y, cell.m_x, (cell.m_y + cell.m_height - 1), Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
-	al_draw_line(cell.m_x, (cell.m_y + cell.m_height - 1), (cell.m_x + cell.m_width - 1), (cell.m_y + cell.m_height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
-	al_draw_line((cell.m_x + cell.m_width - 1), cell.m_y, (cell.m_x + cell.m_width - 1), (cell.m_y + cell.m_height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
-
-	if (cell.m_value != Cell::Cell_Empty)
-	{
-		al_draw_bitmap(Grid::m_sprites[cell.m_value - 1], cell.m_x, cell.m_y, 0);
-	}
 }
 
 bool Grid::generateSprites(int32_t cell_width, int32_t cell_height)
@@ -334,4 +334,16 @@ bool Grid::generateSprites(int32_t cell_width, int32_t cell_height)
 	al_set_target_bitmap(target);
 
 	return true;
+}
+
+void Grid::setCell(int32_t& grid, int32_t cellNumber, Grid::CellType type)
+{
+	int32_t nullValue = 0b11;
+	grid &= ~(nullValue << (2 * cellNumber));
+	grid |= (int32_t(type) << (2 * cellNumber));
+}
+
+Grid::CellType Grid::getCell(int32_t grid, int32_t cellNumber)
+{
+	return Grid::CellType((grid >> (2 * cellNumber)) & 0b11);
 }

@@ -25,7 +25,7 @@ int32_t App::run(const std::vector<std::string>& argList)
 	return 0;
 }
 
-App::App() : m_display(), m_queue(), m_timer(), m_kill(false), m_dirty(true), m_counter(0), m_grid(nullptr)
+App::App() : m_display(), m_queue(), m_timer(), m_kill(false), m_dirty(true), m_counter(0), m_grid(nullptr), m_gameState(App::GameState::StateUndefined)
 {
 }
 
@@ -35,6 +35,8 @@ App::~App()
 
 int32_t App::initialize(const std::vector<std::string>& argList)
 {
+	this->m_gameState = App::GameState::StateInitializing;
+
 	std::cout << "Initialization Begin" << std::endl;
 
 	std::cout << "Initializing Allegro Library: ";
@@ -140,12 +142,15 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 	al_start_timer(this->m_timer);
 
 	std::cout << "Initialization Complete" << std::endl << std::endl;
-
+	
+	this->m_gameState = App::GameState::StatePlayerX;
+	
 	return 0;
 }
 
 void App::shutdown()
 {
+	this->m_gameState = App::GameState::StateShuttingdown;
 	std::cout << std::endl << "Shutdown Begin" << std::endl;
 
 	if (this->m_grid)

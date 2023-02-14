@@ -24,9 +24,6 @@
     <ClCompile Include="src\app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cell.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -42,9 +39,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\app.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\cell.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\grid.h">
