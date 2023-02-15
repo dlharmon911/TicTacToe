@@ -2,6 +2,7 @@
 #define _APPLICATION_H_
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
 #include <vector>
 #include <string>
 #include "grid.h"
@@ -82,6 +83,8 @@ namespace TicTacToe
 		{
 			StateUndefined,
 			StateInitializing,
+			StateTitleScreen,
+			StateContinueScreen,
 			StateShuttingdown,
 			StatePlayerX,
 			StatePlayerO,
@@ -91,12 +94,25 @@ namespace TicTacToe
 		ALLEGRO_DISPLAY* m_display;
 		ALLEGRO_EVENT_QUEUE* m_queue;
 		ALLEGRO_TIMER* m_timer;
+		ALLEGRO_FONT* m_font;
 		bool m_kill;
 		bool m_dirty;
 		int32_t m_counter;
-		Grid* m_grid;
+		Grid m_grid;
 		Mouse m_mouse;
 		GameState m_gameState;
+
+		enum class TitleOptions
+		{
+			New,
+			Options,
+			Quit,
+			Continue,
+			Count
+		};
+		TitleOptions m_option;
+
+		static const char* option_text[int32_t(TitleOptions::Count)];
 
 		static const int32_t SCREEN_WIDTH;
 		static const int32_t SCREEN_HEIGHT;

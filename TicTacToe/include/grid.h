@@ -7,23 +7,23 @@ namespace TicTacToe
 {
 	class Grid
 	{
-	private:
+	public:
 		/**
 		Constructor for Grid
 		@param none
 		@return none
 		*/
 		Grid();
-		Grid(const Grid& grid) = delete;
-		Grid& operator = (const Grid& grid) = delete;
-	public:
+		Grid(const Grid& grid);
+		Grid& operator = (const Grid& grid);
+
 		/**
 		Resize grid and calculate coords of cell in the grid
 		@param width - width of display
 		@param height - height of display
-		@return Grid on success, nullptr on failure
+		@return none
 		*/
-		static Grid* generateGrid(int32_t width, int32_t height);
+		void resizeGrid(int32_t width, int32_t height);
 
 		/**
 		Deconstructor for Grid
@@ -58,10 +58,24 @@ namespace TicTacToe
 
 		enum class CellType
 		{
-			Cell_Empty,
-			Cell_X,
-			Cell_O
+			Empty,
+			X,
+			O
 		};
+
+		/**
+		Returns the width of cell[0]
+		@param none
+		@return width of cell[0]
+		*/
+		int32_t getCellWidth() const;
+
+		/**
+		Returns the height of cell[0]
+		@param none
+		@return height of cell[0]
+		*/
+		int32_t getCellHeight() const;
 
 	private:
 
@@ -89,17 +103,9 @@ namespace TicTacToe
 
 		enum class CellStatus
 		{
-			CELL_NORMAL,
-			CELL_HOVER
+			Normal,
+			Hover
 		};
-
-		/**
-		Generate the X and O sprites based on given cell width and height
-		@param cell_width - width of the cell
-		@param cell_height - height of the cell
-		@return true on success
-		*/
-		bool generateSprites(int32_t cell_width, int32_t cell_height);
 
 		// number of cells in a row
 		static const int32_t grid_width;
@@ -118,7 +124,6 @@ namespace TicTacToe
 
 		int32_t m_grid;
 		Cell m_cell[9];
-		ALLEGRO_BITMAP* m_sprites[2];
 	};
 }
 

@@ -153,10 +153,12 @@
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\mouse.cpp" />
+    <ClCompile Include="src\sprites.cpp" />
     <ClCompile Include="src\theme.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\app.h" />
+    <ClInclude Include="include\sprites.h" />
     <ClInclude Include="include\theme.h" />
     <ClInclude Include="include\grid.h" />
     <ClInclude Include="include\mouse.h" />
