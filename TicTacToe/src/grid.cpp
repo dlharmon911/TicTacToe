@@ -196,29 +196,15 @@ Grid::GridValue Grid::evaluateGrid() const
 
 Grid::GridValue Grid::evaluateGrid(int32_t grid)
 {
-	bool isTie = true;
-
-	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
-	{
-		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
-		{
-			isTie = false;
-		}
-	}
-
-	if (isTie)
-	{
-		return GridValue::Tie;
-	}
-
-	const int32_t numberOfWins = 8;
-
 	typedef struct Triplet
 	{
 		int32_t p1;
 		int32_t p2;
 		int32_t p3;
 	} Triplet;
+
+	bool isTie = true;
+	const int32_t numberOfWins = 8;
 
 	// there are 8 possible combinations of 3 cells to win
 	// 3 rows, 3 columns, 2 diagonals
@@ -233,7 +219,7 @@ Grid::GridValue Grid::evaluateGrid(int32_t grid)
 		{ 0, 4, 8 },
 		{ 2, 4, 6 }
 	};
-	GridValue winOutcomes[3] = {GridValue::Human, GridValue::Computer };
+	GridValue winOutcomes[2] = {GridValue::Human, GridValue::Computer };
 
 	// go through all 8 possible combinations
 	// if all 3 cells in each combination ANDed together then they match and it is a win
@@ -241,8 +227,25 @@ Grid::GridValue Grid::evaluateGrid(int32_t grid)
 	{
 		if (static_cast<int32_t>(Grid::getCell(grid, triplets[i].p1)) &
 			static_cast<int32_t>(Grid::getCell(grid, triplets[i].p2)) &
-			static_cast<int32_t>(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[static_cast<int32_t>(Grid::getCell(grid, triplets[i].p1)) - static_cast<int32_t>(CellType::Human)];
+			static_cast<int32_t>(Grid::getCell(grid, triplets[i].p3)))
+		{
+			return winOutcomes[static_cast<int32_t>(Grid::getCell(grid, triplets[i].p1)) - static_cast<int32_t>(CellType::Human)];
+		}
 	}
+
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
+		{
+			isTie = false;
+		}
+	}
+
+	if (isTie)
+	{
+		return GridValue::Tie;
+	}
+
 	return GridValue::Undecided;
 }
 
@@ -257,7 +260,7 @@ int32_t Grid::findComputerMove() const
 		if (Grid::getCell(temp, index) == Grid::CellType::Empty)
 		{
 			Grid::setCell(temp, index, Grid::CellType::Computer);
-			int32_t value = Grid::findMaximum(temp);
+			int32_t value = Grid::calculateMaximumValue(temp);
 			Grid::setCell(temp, index, Grid::CellType::Empty);
 
 			if (value < min)
@@ -271,7 +274,7 @@ int32_t Grid::findComputerMove() const
 	return move;
 }
 
-int32_t Grid::findMinimum(int32_t grid)
+int32_t Grid::calculateMinimumValue(int32_t grid)
 {
 	int32_t min = 10000;
 	GridValue value = Grid::evaluateGrid(grid);
@@ -286,7 +289,7 @@ int32_t Grid::findMinimum(int32_t grid)
 		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
 		{
 			Grid::setCell(grid, index, Grid::CellType::Computer);
-			min = std::min(min, Grid::findMaximum(grid));
+			min = std::min(min, Grid::calculateMaximumValue(grid));
 			Grid::setCell(grid, index, Grid::CellType::Empty);
 		}
 	}
@@ -294,7 +297,7 @@ int32_t Grid::findMinimum(int32_t grid)
 	return min;
 }
 
-int32_t Grid::findMaximum(int32_t grid)
+int32_t Grid::calculateMaximumValue(int32_t grid)
 {
 	int32_t max = -10000;
 	GridValue value = Grid::evaluateGrid(grid);
@@ -309,7 +312,7 @@ int32_t Grid::findMaximum(int32_t grid)
 		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
 		{
 			Grid::setCell(grid, index, Grid::CellType::Human);
-			max = std::max(max, Grid::findMinimum(grid));
+			max = std::max(max, Grid::calculateMinimumValue(grid));
 			Grid::setCell(grid, index, Grid::CellType::Empty);
 		}
 	}

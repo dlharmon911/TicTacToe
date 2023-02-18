@@ -136,14 +136,14 @@ namespace TicTacToe
 		@param none
 		@return the minimum value
 		*/
-		static int32_t findMinimum(int32_t grid);
+		static int32_t calculateMinimumValue(int32_t grid);
 
 		/**
 		Calculate the maximum value for every possible set of moves
 		@param none
 		@return the maximum value
 		*/
-		static int32_t findMaximum(int32_t grid);
+		static int32_t calculateMaximumValue(int32_t grid);
 
 		/**
 		Evaluate the value of the grid
