@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include "grid.h"
-#include "mouse.h"
+#include "input.h"
 
 namespace TicTacToe
 {
@@ -63,6 +63,13 @@ namespace TicTacToe
 		@param none
 		@return none
 		*/
+		void drawGameStatus();
+
+		/**
+		Output to the screen
+		@param none
+		@return none
+		*/
 		void draw();
 
 		/**
@@ -95,29 +102,34 @@ namespace TicTacToe
 		ALLEGRO_EVENT_QUEUE* m_queue;
 		ALLEGRO_TIMER* m_timer;
 		ALLEGRO_FONT* m_font;
+		ALLEGRO_BITMAP* m_buffer;
 		bool m_kill;
 		bool m_dirty;
 		int32_t m_counter;
 		Grid m_grid;
-		Mouse m_mouse;
+		Input m_input;
 		GameState m_gameState;
+		int32_t m_playerCountdown;
 
 		enum class TitleOptions
 		{
-			New,
-			Options,
-			Quit,
-			Continue,
-			Count
+			OptionNew,
+			OptionOptions,
+			OptionQuit,
+			OptionContinue,
+			OptionCount
 		};
 		TitleOptions m_option;
 
-		static const char* option_text[int32_t(TitleOptions::Count)];
+		static const char* optionText[int32_t(TitleOptions::OptionCount)];
 
-		static const int32_t SCREEN_WIDTH;
-		static const int32_t SCREEN_HEIGHT;
-		static const double LOGIC_RATE;
-		static const char* APP_NAME;
+		static const int32_t screenWidth;
+		static const int32_t screenHeight;
+		static const double logicRate;
+		static const char* appTitle;
+		static const char* author;
+		static const int32_t gridWidth;
+		static const int32_t gridHeight;
 	};
 }
 

@@ -8,11 +8,14 @@
 
 using namespace TicTacToe;
 
-const int32_t App::SCREEN_WIDTH = 800;
-const int32_t App::SCREEN_HEIGHT = 600;
-const double App::LOGIC_RATE = 60.0;
-const char* App::APP_NAME = "Tic Tac Toe";
-const char* App::option_text[int32_t(TitleOptions::Count)] =
+const int32_t App::screenWidth = 800;
+const int32_t App::screenHeight = 620;
+const double App::logicRate = 60.0;
+const char* App::appTitle = "Tic Tac Toe";
+const char* App::author = "Daniel Harmon";
+const int32_t App::gridWidth = 800;
+const int32_t App::gridHeight = 600;
+const char* App::optionText[int32_t(TitleOptions::OptionCount)] =
 {
 	"New Game",
 	"Options",
@@ -34,7 +37,19 @@ int32_t App::run(const std::vector<std::string>& argList)
 	return 0;
 }
 
-App::App() : m_display(nullptr), m_queue(nullptr), m_timer(nullptr), m_font(nullptr), m_kill(false), m_dirty(true), m_counter(0), m_grid(), m_gameState(App::GameState::StateUndefined), m_option(App::TitleOptions::New)
+App::App() : 
+	m_display(nullptr), 
+	m_queue(nullptr), 
+	m_timer(nullptr), 
+	m_font(nullptr), 
+	m_buffer(nullptr), 
+	m_kill(false), 
+	m_dirty(true), 
+	m_counter(0), 
+	m_grid(), 
+	m_gameState(App::GameState::StateUndefined), 
+	m_playerCountdown(0),
+	m_option(App::TitleOptions::OptionNew)
 {
 }
 
@@ -65,7 +80,7 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 		al_destroy_path(basePath);
 	}
 
-	std::cout << "Initializing Mouse: ";
+	std::cout << "Initializing Input: ";
 	if (!al_install_mouse())
 	{
 		std::cout << "failed" << std::endl;
@@ -105,9 +120,11 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 	}
 	std::cout << "pass" << std::endl;
 
-	std::cout << "Creating Display: ";
+	std::cout << "Creating Display: "; 
+	al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
+	al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
 	al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
-	this->m_display = al_create_display(App::SCREEN_WIDTH, App::SCREEN_HEIGHT);
+	this->m_display = al_create_display(App::screenWidth, App::screenHeight);
 	if (!this->m_display)
 	{
 		std::cout << "failed" << std::endl;
@@ -121,7 +138,16 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 		al_set_display_icon(this->m_display, icon);
 		al_destroy_bitmap(icon);
 	}
-	al_set_window_title(this->m_display, App::APP_NAME);
+	al_set_window_title(this->m_display, App::appTitle);
+
+	std::cout << "Creating Buffer Bitmap: ";
+	this->m_buffer = al_create_bitmap(App::screenWidth, App::screenHeight);
+	if (!this->m_buffer)
+	{
+		std::cout << "failed" << std::endl;
+		return -1;
+	}
+	std::cout << "pass" << std::endl;
 
 	std::cout << "Creating Event Queue: ";
 	this->m_queue = al_create_event_queue();
@@ -133,7 +159,7 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 	std::cout << "pass" << std::endl;
 
 	std::cout << "Creating Logic Timer: ";
-	this->m_timer = al_create_timer(1.0 / App::LOGIC_RATE);
+	this->m_timer = al_create_timer(1.0 / App::logicRate);
 	if (!this->m_timer)
 	{
 		std::cout << "failed" << std::endl;
@@ -155,7 +181,9 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 	al_register_event_source(this->m_queue, al_get_keyboard_event_source());
 	al_register_event_source(this->m_queue, al_get_mouse_event_source());
 
-	this->m_grid.resizeGrid(App::SCREEN_WIDTH, App::SCREEN_HEIGHT);
+	int32_t gridPosX = 0;
+	int32_t gridPosY = 0;
+	this->m_grid.resizeGrid(gridPosX, gridPosY, App::gridWidth, App::gridHeight);
 
 	std::cout << "Creating Sprites: ";
 	if (!Sprites::generateSprites(this->m_grid.getCellWidth(), this->m_grid.getCellHeight()))
@@ -167,21 +195,27 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 
 	srand(time(nullptr));
 
+	al_hide_mouse_cursor(this->m_display);
+
 	al_start_timer(this->m_timer);
 
 	Theme::setTheme(Theme::ThemeOptions::ThemeWedding);
 
-	std::cout << "Initialization Complete" << std::endl << std::endl;
-	
 	this->m_gameState = App::GameState::StateTitleScreen;
+	std::cout << "Initialization Complete" << std::endl << std::endl;
 	
 	return 0;
 }
 
 void App::shutdown()
 {
-	this->m_gameState = App::GameState::StateShuttingdown;
 	std::cout << std::endl << "Shutdown Begin" << std::endl;
+	this->m_gameState = App::GameState::StateShuttingdown;
+
+	if (this->m_display)
+	{
+		al_hide_mouse_cursor(this->m_display);
+	}
 
 	if (Sprites::freeSprites())
 	{
@@ -208,6 +242,13 @@ void App::shutdown()
 		al_destroy_event_queue(this->m_queue);
 		this->m_queue = nullptr;
 		std::cout << "Queue Destroyed" << std::endl;
+	}
+
+	if (this->m_buffer)
+	{
+		al_destroy_bitmap(this->m_buffer);
+		this->m_buffer = nullptr;
+		std::cout << "Buffer Bitmap Destroyed" << std::endl;
 	}
 
 	if (this->m_display)
@@ -246,67 +287,163 @@ int32_t App::loop()
 
 void App::draw()
 {
+	static const char* prompt = "-> ";
+	static const char* by = "by ";
+
+	al_set_target_bitmap(this->m_buffer);
+
 	al_clear_to_color(Theme::getColor(Theme::ColorList::COLOR_BACKGROUND));
 
 	if (this->m_gameState == App::GameState::StateTitleScreen || this->m_gameState == App::GameState::StateContinueScreen)
 	{
+		static float w = float(App::screenWidth) / 3.0f;
+		static float h = float(App::screenHeight) / 3.0f;
+
+		static float bw = al_get_text_width(this->m_font, by);
+		static float aw = al_get_text_width(this->m_font, App::author);
+		static float bx = (w - (bw + aw)) / 2.0f;
+
 		ALLEGRO_BITMAP* b = Sprites::getSprite(Sprites::SpriteList::Title);
-		float dx = float(App::SCREEN_WIDTH) * 0.1f;
-		float dy = float(App::SCREEN_HEIGHT) * 0.1f;
-		float dw = float(App::SCREEN_WIDTH) * 0.8f;
-		float dh = float(App::SCREEN_HEIGHT) * 0.4f;
+		float dx = w * 0.1f;
+		float dy = h * 0.1f;
+		float dw = w * 0.8f;
+		float dh = h * 0.4f;
 
 		al_draw_scaled_bitmap(b, 0, 0, al_get_bitmap_width(b), al_get_bitmap_height(b), dx, dy, dw, dh, 0);
 
-		float th = (al_get_font_line_height(this->m_font)) + 4.0f;
-		float tx = (float(App::SCREEN_WIDTH) - al_get_text_width(this->m_font, App::option_text[int32_t(App::TitleOptions::Continue)])) / 2.0f;
-		float ty = dy + dh + th * 4.0f;
+		float th = float(al_get_font_line_height(this->m_font)) * 1.5f;
+		float tx = w / 2.0f;
+		float ty = dy + dh + th * 3.0f;
 		
-
-		for (int32_t i = int32_t(App::TitleOptions::New); i <= int32_t(App::TitleOptions::Quit); ++i)
+		for (int32_t i = int32_t(App::TitleOptions::OptionNew); i <= int32_t(App::TitleOptions::OptionQuit); ++i)
 		{
-			const char* text = App::option_text[i];
-			if (i == int32_t(App::TitleOptions::New) && this->m_gameState == App::GameState::StateContinueScreen)
+			const char* text = App::optionText[i];
+			if (i == int32_t(App::TitleOptions::OptionNew) && this->m_gameState == App::GameState::StateContinueScreen)
 			{
-				text = App::option_text[int32_t(App::TitleOptions::Continue)];
+				text = App::optionText[int32_t(App::TitleOptions::OptionContinue)];
 			}
 			ALLEGRO_COLOR color = Theme::getColor(Theme::ColorList::COLOR_LIGHT);
 			if (i == int32_t(this->m_option))
 			{
 				color = Theme::getColor(Theme::ColorList::COLOR_HOVER);
+				al_draw_text(this->m_font, color, tx - al_get_text_width(this->m_font, prompt), ty + (float(i) * th), 0, prompt);
 			}
 			al_draw_text(this->m_font, color, tx, ty + (float(i) * th), 0, text);
 		}
+		al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), bx, h - (float(al_get_font_line_height(this->m_font)) * 1.5f), ALLEGRO_ALIGN_LEFT, by);
+		al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), bx + bw, h - (float(al_get_font_line_height(this->m_font)) * 1.5f), ALLEGRO_ALIGN_LEFT, App::author);
+		al_set_target_backbuffer(this->m_display);
+		al_draw_scaled_bitmap(this->m_buffer, 0, 0, w, h, 0, 0, float(App::screenWidth), float(App::screenHeight), 0);
 	}
 	else
 	{
 		this->m_grid.drawGrid();
+		this->drawGameStatus();
+		al_set_target_backbuffer(this->m_display);
+		al_draw_bitmap(this->m_buffer, 0, 0, 0);
 	}
 
 	al_flip_display();
+}
+
+void App::drawGameStatus()
+{
+	static const char* prompt = "Status: ";
+	static float cw = float(al_get_text_width(this->m_font, "W"));
+	static float ch = float(al_get_font_line_height(this->m_font));
+	static float tx = cw / 2.0f;
+	static float ty = float(this->gridHeight) + (ch / 2.0f);
+	static float px = tx + float(al_get_text_width(this->m_font, prompt));
+	static char output[256] = "";
+	static const char* text[3] =
+	{
+		"Your Turn",
+		"Computer Turn",
+		"Game Over"
+	};
+
+	int32_t t = int32_t(this->m_gameState) - int32_t(App::GameState::StatePlayerX);
+
+	strncpy_s(output, text[t], 256);
+
+	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), tx + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, prompt);
+	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_HOVER), tx, ty, ALLEGRO_ALIGN_LEFT, prompt);
+
+	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), px + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, output);
+	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_HOVER), px, ty, ALLEGRO_ALIGN_LEFT, output);
+
 }
 
 void App::doLogic()
 {
 	if (this->m_gameState == App::GameState::StateTitleScreen || this->m_gameState == App::GameState::StateContinueScreen)
 	{
+
 	}
-
-	if (this->m_gameState == App::GameState::StatePlayerX)
+	else
 	{
-		if (this->m_mouse.getStatus() & Mouse::Status_Moved)
+
+		if (this->m_playerCountdown > 0)
 		{
-			this->m_grid.mouseHover(this->m_mouse.getX(), this->m_mouse.getY());
-			this->m_mouse.acknowledgeMove();
+			--this->m_playerCountdown;
 		}
 
-		if (this->m_grid.isInsideCell(this->m_mouse.getX(), this->m_mouse.getY()) >= 0)
+		if (this->m_gameState == App::GameState::StatePlayerO && this->m_playerCountdown == 0)
 		{
-			al_set_system_mouse_cursor(this->m_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+			int32_t cell = this->m_grid.findComputerMove();
+			this->m_grid.setCell(cell, Grid::CellType::Computer);
+
+			Grid::GridValue value = this->m_grid.evaluateGrid();
+
+			if (value == Grid::GridValue::Undecided)
+			{
+				this->m_gameState = App::GameState::StatePlayerX;
+			}
+			else
+			{
+				this->m_gameState = App::GameState::StateGameOver;
+			}
+
+			this->m_dirty = true;
 		}
-		else
+
+
+
+		if (this->m_gameState == App::GameState::StatePlayerX)
 		{
-			al_set_system_mouse_cursor(this->m_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+			int32_t insideCell = this->m_grid.isInsideCell(this->m_input.getX(), this->m_input.getY());
+
+			if (this->m_input.getButton(Input::MouseButton::Left))
+			{
+			}
+
+			if (insideCell >= 0)
+			{
+				if (this->m_input.getButton(Input::MouseButton::Left))
+				{
+					this->m_grid.setCell(insideCell, Grid::CellType::Human);
+
+					Grid::GridValue value = this->m_grid.evaluateGrid();
+
+					if (value == Grid::GridValue::Undecided)
+					{
+						this->m_gameState = App::GameState::StatePlayerO;
+						this->m_playerCountdown = 60;// (60 * (rand() % 3));
+					}
+					else
+					{
+						this->m_gameState = App::GameState::StateGameOver;
+					}
+
+					this->m_dirty = true;
+				}
+
+				al_set_system_mouse_cursor(this->m_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_LINK);
+			}
+			else
+			{
+				al_set_system_mouse_cursor(this->m_display, ALLEGRO_SYSTEM_MOUSE_CURSOR_DEFAULT);
+			}
 		}
 	}
 }
@@ -329,32 +466,30 @@ void App::processInput()
 		case ALLEGRO_EVENT_MOUSE_AXES:
 		{
 			this->m_dirty = true;
-			if (this->m_gameState == App::GameState::StatePlayerX)
-			{
-				this->m_mouse.OnEventAxes(event.mouse.x, event.mouse.y);
-			}
+			this->m_input.OnEventAxes(event.mouse.x, event.mouse.y);
 		} break;
 
 		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 		{
 			this->m_dirty = true;
-			if (this->m_gameState == App::GameState::StatePlayerX)
-			{
-				this->m_mouse.OnEventButtonDown(event.mouse.button);
-			}
+			this->m_input.OnEventButtonDown(Input::MouseButton(event.mouse.button - 1));
 		} break;
 
 		case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
 		{
 			this->m_dirty = true;
-			if (this->m_gameState == App::GameState::StatePlayerX)
-			{
-				this->m_mouse.OnEventButtonUp(event.mouse.button);
-			}
-		} break;		
+			this->m_input.OnEventButtonUp(Input::MouseButton(event.mouse.button - 1));
+		} break;	
+
+		case ALLEGRO_EVENT_KEY_DOWN:
+		{
+			this->m_input.OnEventKeyDown(event.keyboard.keycode);
+		} break;
 
 		case ALLEGRO_EVENT_KEY_UP:
 		{
+			this->m_input.OnEventKeyUp(event.keyboard.keycode);
+
 			if (event.keyboard.keycode == ALLEGRO_KEY_OPENBRACE)
 			{
 				Theme::incTheme();
@@ -364,7 +499,6 @@ void App::processInput()
 				Theme::decTheme();
 			}
 
-
 			this->m_dirty = true;
 			switch (this->m_gameState)
 			{
@@ -373,7 +507,8 @@ void App::processInput()
 					if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 					{
 						this->m_gameState = App::GameState::StateContinueScreen;
-						this->m_option = App::TitleOptions::New;
+						this->m_option = App::TitleOptions::OptionNew;
+						al_hide_mouse_cursor(this->m_display);
 					}
 				} break;
 
@@ -383,11 +518,12 @@ void App::processInput()
 					if (event.keyboard.keycode == ALLEGRO_KEY_ENTER ||
 						event.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
 					{
-						if (this->m_option == App::TitleOptions::New)
+						if (this->m_option == App::TitleOptions::OptionNew)
 						{
 							this->m_gameState = App::GameState::StatePlayerX;
+							al_show_mouse_cursor(this->m_display);
 						}
-						if (this->m_option == App::TitleOptions::Quit)
+						if (this->m_option == App::TitleOptions::OptionQuit)
 						{
 							this->m_kill = true;
 						}
@@ -396,9 +532,9 @@ void App::processInput()
 					if (event.keyboard.keycode == ALLEGRO_KEY_UP ||
 						event.keyboard.keycode == ALLEGRO_KEY_PAD_8)
 					{
-						if (this->m_option == App::TitleOptions::New)
+						if (this->m_option == App::TitleOptions::OptionNew)
 						{
-							this->m_option = App::TitleOptions::Quit;
+							this->m_option = App::TitleOptions::OptionQuit;
 						}
 						else
 						{
@@ -408,9 +544,9 @@ void App::processInput()
 					if (event.keyboard.keycode == ALLEGRO_KEY_DOWN ||
 						event.keyboard.keycode == ALLEGRO_KEY_PAD_2)
 					{
-						if (this->m_option == App::TitleOptions::Quit)
+						if (this->m_option == App::TitleOptions::OptionQuit)
 						{
-							this->m_option = App::TitleOptions::New;
+							this->m_option = App::TitleOptions::OptionNew;
 						}
 						else
 						{
@@ -428,7 +564,7 @@ void App::processInput()
 
 		case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT:
 		{
-			this->m_mouse.OnEventAxes(-1, -1);
+			this->m_input.OnEventAxes(-1, -1);
 			this->m_dirty = true;
 		} break;
 		
@@ -445,4 +581,3 @@ void App::processInput()
 		}
 	}
 }
-

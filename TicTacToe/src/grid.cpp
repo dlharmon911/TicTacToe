@@ -2,34 +2,31 @@
 #include <iostream>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <vector>
 #include "grid.h"
 #include "theme.h"
 #include "sprites.h"
 
 using namespace TicTacToe;
 
-const int32_t Grid::grid_width = 3;
-const int32_t Grid::grid_height = 3;
+const int32_t Grid::gridColumnCount = 3;
+const int32_t Grid::gridRowCount = 3;
 
 Grid::Grid() : m_grid(0), m_cell()
 {
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
 		this->m_cell[index].x = 0;
 		this->m_cell[index].y = 0;
 		this->m_cell[index].width = 0;
 		this->m_cell[index].height = 0;
-		this->m_cell[index].status = Grid::CellStatus::Normal;
+		this->m_cell[index].status = Grid::CellStatus::StatusNormal;
 	}
-
-	//testing only
-	this->setCell(this->m_grid, 0, Grid::CellType::O);
-	this->setCell(this->m_grid, 4, Grid::CellType::X);
 }
 
 Grid::Grid(const Grid& grid) : m_grid(grid.m_grid), m_cell()
 {
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
 		this->m_cell[index] = grid.m_cell[index];
 	}
@@ -41,14 +38,14 @@ Grid& Grid::operator = (const Grid& grid)
 {
 	this->m_grid = grid.m_grid;
 
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
 		this->m_cell[index] = grid.m_cell[index];
 	}
 	return *this;
 }
 
-void Grid::resizeGrid(int32_t width, int32_t height)
+void Grid::resizeGrid(int32_t x, int32_t y, int32_t width, int32_t height)
 {
 		enum Padding
 		{
@@ -78,22 +75,22 @@ void Grid::resizeGrid(int32_t width, int32_t height)
 			cell_padding[PADDING_LEFT] * 2,
 			cell_padding[PADDING_TOP] * 2
 		};
-		const int32_t cell_width = (width - (cell_padding[PADDING_LEFT] + cell_padding[PADDING_RIGHT] + 2 * cell_spacing[SPACING_HORIZONTAL])) / grid_width;
-		const int32_t cell_height = (height - (cell_padding[PADDING_TOP] + cell_padding[PADDING_BOTTOM] + 2 * cell_spacing[SPACING_VERTICAL])) / grid_height;
+		const int32_t cell_width = (width - (cell_padding[PADDING_LEFT] + cell_padding[PADDING_RIGHT] + 2 * cell_spacing[SPACING_HORIZONTAL])) / gridColumnCount;
+		const int32_t cell_height = (height - (cell_padding[PADDING_TOP] + cell_padding[PADDING_BOTTOM] + 2 * cell_spacing[SPACING_VERTICAL])) / gridRowCount;
 
-		for (int32_t j = 0; j < Grid::grid_height; ++j)
+		for (int32_t j = 0; j < Grid::gridRowCount; ++j)
 		{
-			for (int32_t i = 0; i < Grid::grid_width; ++i)
+			for (int32_t i = 0; i < Grid::gridColumnCount; ++i)
 			{
-				int index = i + j * Grid::grid_width;
-				int x = cell_padding[PADDING_LEFT] + i * (cell_spacing[SPACING_HORIZONTAL] + cell_width);
-				int y = cell_padding[PADDING_TOP] + j * (cell_spacing[SPACING_VERTICAL] + cell_height);
+				int index = i + j * Grid::gridColumnCount;
+				int px = cell_padding[PADDING_LEFT] + i * (cell_spacing[SPACING_HORIZONTAL] + cell_width);
+				int py = cell_padding[PADDING_TOP] + j * (cell_spacing[SPACING_VERTICAL] + cell_height);
 
-				this->m_cell[index].x = x;
-				this->m_cell[index].y = y;
+				this->m_cell[index].x = x + px;
+				this->m_cell[index].y = y + py;
 				this->m_cell[index].width = cell_width;
 				this->m_cell[index].height = cell_height;
-				this->m_cell[index].status = Grid::CellStatus::Normal;
+				this->m_cell[index].status = Grid::CellStatus::StatusNormal;
 			}
 		}
 }
@@ -108,17 +105,23 @@ int32_t Grid::getCellHeight() const
 	return this->m_cell[0].height;
 }
 
+void Grid::setCell(int32_t cell, CellType type)
+{
+	Grid::setCell(this->m_grid, cell, type);
+	this->m_cell[cell].status = Grid::CellStatus::StatusNormal;
+}
+
 void Grid::drawGrid() const
 {
 	const float LINE_THICKNESS = 2.0f;
 
 	al_clear_to_color(Theme::getColor(Theme::COLOR_BACKGROUND));
 
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
 		int32_t face = Theme::COLOR_FACE;
 
-		if (this->m_cell[index].status == Grid::CellStatus::Hover)
+		if (this->m_cell[index].status == Grid::CellStatus::StatusHover)
 		{
 			face = Theme::COLOR_HOVER;
 		}
@@ -131,7 +134,7 @@ void Grid::drawGrid() const
 
 		if (this->getCell(this->m_grid, index) != Grid::CellType::Empty)
 		{
-			Sprites::SpriteList sp = Sprites::SpriteList(int32_t(Sprites::SpriteList::X) + int32_t(this->getCell(this->m_grid, index)) - 1);
+			Sprites::SpriteList sp = Sprites::SpriteList(int32_t(Sprites::SpriteList::Human) + int32_t(this->getCell(this->m_grid, index)) - 1);
 
 			al_draw_bitmap(Sprites::getSprite(sp), this->m_cell[index].x, this->m_cell[index].y, 0);
 		}
@@ -140,14 +143,17 @@ void Grid::drawGrid() const
 
 int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y)
 {
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
+		this->m_cell[index].status = CellStatus::StatusNormal;
+
 		if (this->getCell(this->m_grid, index) == Grid::CellType::Empty &&
 			mouse_x >= this->m_cell[index].x &&
 			mouse_x < (this->m_cell[index].x + this->m_cell[index].width) &&
 			mouse_y >= this->m_cell[index].y &&
 			mouse_y < (this->m_cell[index].y + this->m_cell[index].height))
 		{
+			this->m_cell[index].status = CellStatus::StatusHover;
 			return index;
 		}
 	}
@@ -155,27 +161,54 @@ int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y)
 	return -1;
 }
 
-void Grid::mouseHover(int32_t mouse_x, int32_t mouse_y)
+void Grid::setCell(int32_t& grid, int32_t cellNumber, Grid::CellType type)
 {
-	for (int32_t index = 0; index < (Grid::grid_width * Grid::grid_height); ++index)
-	{
-		this->m_cell[index].status = Grid::CellStatus::Normal;
-
-		if (this->getCell(this->m_grid, index) == Grid::CellType::Empty &&
-				mouse_x >= this->m_cell[index].x &&
-				mouse_x < (this->m_cell[index].x + this->m_cell[index].width) &&
-				mouse_y >= this->m_cell[index].y &&
-				mouse_y < (this->m_cell[index].y + this->m_cell[index].height))
-		{
-			this->m_cell[index].status = Grid::CellStatus::Hover;
-		}
-	}
+	int32_t nullValue = 0b11;
+	grid &= ~(nullValue << (2 * cellNumber));
+	grid |= (int32_t(type) << (2 * cellNumber));
 }
 
-int32_t Grid::evaluateGrid(int32_t grid)
+Grid::CellType Grid::getCell(int32_t grid, int32_t cellNumber)
 {
+	return Grid::CellType((grid >> (2 * cellNumber)) & 0b11);
+}
+
+bool Grid::isTie()
+{
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(this->m_grid, index) == Grid::CellType::Empty)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+Grid::GridValue Grid::evaluateGrid() const
+{
+	return Grid::evaluateGrid(this->m_grid);
+}
+
+Grid::GridValue Grid::evaluateGrid(int32_t grid)
+{
+	bool isTie = true;
+
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
+		{
+			isTie = false;
+		}
+	}
+
+	if (isTie)
+	{
+		return GridValue::Tie;
+	}
+
 	const int32_t numberOfWins = 8;
-	
+
 	typedef struct Triplet
 	{
 		int32_t p1;
@@ -196,28 +229,85 @@ int32_t Grid::evaluateGrid(int32_t grid)
 		{ 0, 4, 8 },
 		{ 2, 4, 6 }
 	};
-	int32_t winOutcomes[3] = { 0, 10, -10 };
+	GridValue winOutcomes[3] = {GridValue::Human, GridValue::Computer };
 
 	// go through all 8 possible combinations
 	// if all 3 cells in each combination ANDed together then they match and it is a win
 	for (int32_t i = 0; i < numberOfWins; ++i)
 	{
-		if (int32_t(Grid::getCell(grid, triplets[i].p1)) & 
+		if (int32_t(Grid::getCell(grid, triplets[i].p1)) &
 			int32_t(Grid::getCell(grid, triplets[i].p2)) &
-			int32_t(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[int32_t(Grid::getCell(grid, triplets[i].p1))];
+			int32_t(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[int32_t(Grid::getCell(grid, triplets[i].p1)) - int32_t(CellType::Human)];
+	}
+	return GridValue::Undecided;
+}
+
+int32_t Grid::findComputerMove()
+{
+	int32_t move = -1;
+	int32_t min = 10000;
+
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(this->m_grid, index) == Grid::CellType::Empty)
+		{
+			Grid::setCell(this->m_grid, index, Grid::CellType::Computer);
+			int32_t value = Grid::findMaximum(this->m_grid);
+			Grid::setCell(this->m_grid, index, Grid::CellType::Empty);
+
+			if (value < min)
+			{
+				move = index;
+				min = value;
+			}
+		}
 	}
 
-	return 0;
+	return move;
 }
 
-void Grid::setCell(int32_t& grid, int32_t cellNumber, Grid::CellType type)
+int32_t Grid::findMinimum(int32_t grid)
 {
-	int32_t nullValue = 0b11;
-	grid &= ~(nullValue << (2 * cellNumber));
-	grid |= (int32_t(type) << (2 * cellNumber));
+	int32_t min = 10000;
+	GridValue value = Grid::evaluateGrid(grid);
+
+	if (value != GridValue::Undecided)
+	{
+		return int32_t(value);
+	}
+
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
+		{
+			Grid::setCell(grid, index, Grid::CellType::Computer);
+			min = std::min(min, Grid::findMaximum(grid));
+			Grid::setCell(grid, index, Grid::CellType::Empty);
+		}
+	}
+
+	return min;
 }
 
-Grid::CellType Grid::getCell(int32_t grid, int32_t cellNumber)
+int32_t Grid::findMaximum(int32_t grid)
 {
-	return Grid::CellType((grid >> (2 * cellNumber)) & 0b11);
+	int32_t max = -10000;
+	GridValue value = Grid::evaluateGrid(grid);
+
+	if (value != GridValue::Undecided)
+	{
+		return int32_t(value);
+	}
+
+	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
+	{
+		if (Grid::getCell(grid, index) == Grid::CellType::Empty)
+		{
+			Grid::setCell(grid, index, Grid::CellType::Human);
+			max = std::max(max, Grid::findMinimum(grid));
+			Grid::setCell(grid, index, Grid::CellType::Empty);
+		}
+	}
+
+	return max;
 }

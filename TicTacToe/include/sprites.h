@@ -10,7 +10,7 @@ namespace TicTacToe
 	public:
 
 		/**
-		Generate the X and O sprites based on given cell width and height
+		Generate the Human and Computer sprites based on given cell width and height
 		@param cell_width - width of the cell
 		@param cell_height - height of the cell
 		@return true on success
@@ -27,8 +27,8 @@ namespace TicTacToe
 		enum class SpriteList
 		{
 			Title,
-			X,
-			O,
+			Human,
+			Computer,
 			Count
 		};
 

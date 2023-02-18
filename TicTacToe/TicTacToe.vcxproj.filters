@@ -30,7 +30,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mouse.cpp">
+    <ClCompile Include="src\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\theme.cpp">
@@ -47,7 +47,7 @@
     <ClInclude Include="include\grid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\mouse.h">
+    <ClInclude Include="include\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\theme.h">

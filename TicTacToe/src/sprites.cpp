@@ -1,6 +1,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
+#include <cmath>
 #include "sprites.h"
 #include "theme.h"
 
@@ -14,6 +15,12 @@ Sprites::~Sprites() {}
 
 bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 {
+	typedef struct Point
+	{
+		float x;
+		float y;
+	} Point;
+
 	ALLEGRO_BITMAP* target = al_get_target_bitmap();
 
 	ALLEGRO_FONT* font = al_create_builtin_font();
@@ -52,7 +59,6 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	/*******************************************************************************/
 
 	const float LINE_THICKNESS = 2.0f;
-
 	const int32_t X_CENTER = cell_width >> 1;
 	const int32_t Y_CENTER = cell_height >> 1;
 	const float X_THICKNESS_WIDTH = float(cell_width >> 3);
@@ -80,24 +86,18 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	// create bitmaps
 	for (int32_t i = 0; i < 2; ++i)
 	{
-		// create X
-		Sprites::m_sprites[int32_t(Sprites::SpriteList::X) + i] = al_create_bitmap(cell_width, cell_height);
-		if (!Sprites::m_sprites[int32_t(Sprites::SpriteList::X) + i])
+		// create Human
+		Sprites::m_sprites[int32_t(Sprites::SpriteList::Human) + i] = al_create_bitmap(cell_width, cell_height);
+		if (!Sprites::m_sprites[int32_t(Sprites::SpriteList::Human) + i])
 		{
 			al_set_target_bitmap(target);
 			return false;
 		}
 	}
 
-	// create X
-	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::X)]);
+	// create Human
+	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::Human)]);
 	al_clear_to_color(al_map_rgb(255, 0, 255));
-
-	typedef struct Point
-	{
-		float x;
-		float y;
-	} Point;
 
 	Point points[12] =
 	{
@@ -163,12 +163,12 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 		p = lines[l];
 	}
 
-	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::X)], al_map_rgb(255, 0, 255));
+	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::Human)], al_map_rgb(255, 0, 255));
 
 	/********************************************************************************
-	 * create O
+	 * create Computer
 	 ********************************************************************************/
-	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::O)]);
+	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::Computer)]);
 	al_clear_to_color(al_map_rgb(255, 0, 255));
 
 	int ow = cell_width - (cell_padding[PADDING_LEFT] + cell_padding[PADDING_RIGHT]);
@@ -183,7 +183,7 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	al_draw_filled_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, al_map_rgb(255, 0, 255));
 	al_draw_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::COLOR_O_BORDER), LINE_THICKNESS);
 
-	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::O)], al_map_rgb(255, 0, 255));
+	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::Computer)], al_map_rgb(255, 0, 255));
 
 	al_set_target_bitmap(target);
 

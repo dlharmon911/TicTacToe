@@ -19,11 +19,13 @@ namespace TicTacToe
 
 		/**
 		Resize grid and calculate coords of cell in the grid
+		@param x - coord of grid
+		@param y - coord of grid
 		@param width - width of display
 		@param height - height of display
 		@return none
 		*/
-		void resizeGrid(int32_t width, int32_t height);
+		void resizeGrid(int32_t x, int32_t y, int32_t width, int32_t height);
 
 		/**
 		Deconstructor for Grid
@@ -48,19 +50,11 @@ namespace TicTacToe
 		*/
 		int32_t isInsideCell(int32_t mouse_x, int32_t mouse_y);
 
-		/**
-		Tell grid mouse is hovering
-		@param mouse_x - x coord of mouse
-		@param mouse_y - y coord of mouse
-		@return none
-		*/
-		void mouseHover(int32_t mouse_x, int32_t mouse_y);
-
 		enum class CellType
 		{
 			Empty,
-			X,
-			O
+			Human,
+			Computer
 		};
 
 		/**
@@ -77,14 +71,44 @@ namespace TicTacToe
 		*/
 		int32_t getCellHeight() const;
 
+		/**
+		Sets the value of the cell
+		@param cell - the cell to be changed
+		@param type - the type of cell
+		@return none
+		*/
+		void setCell(int32_t cell, CellType type);
+
+		enum class GridValue
+		{
+			Human = 10,
+			Computer = -10,
+			Tie = 0,
+			Undecided = -1
+		};
+
+		bool isTie();
+		Grid::GridValue evaluateGrid() const;
+		int32_t findComputerMove();
+
 	private:
+
+		static int32_t findMinimum(int32_t grid);
+		static int32_t findMaximum(int32_t grid);
+
+		enum class CellStatus
+		{
+			StatusNormal,
+			StatusHover
+		};
+
 
 		/**
 		Evaluate the value of the grid
 		@param none
-		@return 0 if no win or a tie, 10 on X win, -10 on O win
+		@return 0 if no win or a tie, 10 on Human win, -10 on Computer win
 		*/
-		static int32_t evaluateGrid(int32_t grid);
+		static GridValue evaluateGrid(int32_t grid);
 
 		/**
 		Sets the cell value
@@ -101,17 +125,11 @@ namespace TicTacToe
 		*/
 		static Grid::CellType getCell(int32_t grid, int32_t cellNumber);
 
-		enum class CellStatus
-		{
-			Normal,
-			Hover
-		};
-
 		// number of cells in a row
-		static const int32_t grid_width;
+		static const int32_t gridColumnCount;
 
 		// number of cells in a column
-		static const int32_t grid_height;
+		static const int32_t gridRowCount;
 
 		typedef struct Cell
 		{

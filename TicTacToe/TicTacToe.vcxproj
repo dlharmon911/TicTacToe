@@ -152,7 +152,7 @@
     <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\grid.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\mouse.cpp" />
+    <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\sprites.cpp" />
     <ClCompile Include="src\theme.cpp" />
   </ItemGroup>
@@ -161,7 +161,7 @@
     <ClInclude Include="include\sprites.h" />
     <ClInclude Include="include\theme.h" />
     <ClInclude Include="include\grid.h" />
-    <ClInclude Include="include\mouse.h" />
+    <ClInclude Include="include\input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
