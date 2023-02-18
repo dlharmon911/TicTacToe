@@ -20,7 +20,6 @@ Grid::Grid() : m_grid(0), m_cell()
 		this->m_cell[index].y = 0;
 		this->m_cell[index].width = 0;
 		this->m_cell[index].height = 0;
-		this->m_cell[index].status = Grid::CellStatus::StatusNormal;
 	}
 }
 
@@ -90,9 +89,13 @@ void Grid::resizeGrid(int32_t x, int32_t y, int32_t width, int32_t height)
 				this->m_cell[index].y = y + py;
 				this->m_cell[index].width = cell_width;
 				this->m_cell[index].height = cell_height;
-				this->m_cell[index].status = Grid::CellStatus::StatusNormal;
 			}
 		}
+}
+
+bool Grid::isInPlay() const
+{
+	return (this->m_grid != 0);
 }
 
 int32_t Grid::getCellWidth() const
@@ -108,52 +111,53 @@ int32_t Grid::getCellHeight() const
 void Grid::setCell(int32_t cell, CellType type)
 {
 	Grid::setCell(this->m_grid, cell, type);
-	this->m_cell[cell].status = Grid::CellStatus::StatusNormal;
 }
 
-void Grid::drawGrid() const
+Grid::CellType Grid::getCell(int32_t cell) const
+{
+	return Grid::getCell(this->m_grid, cell);
+}
+
+void Grid::drawGrid(int32_t mouse_x, int32_t mouse_y) const
 {
 	const float LINE_THICKNESS = 2.0f;
+	int32_t inside = this->isInsideCell(mouse_x, mouse_y);
 
-	al_clear_to_color(Theme::getColor(Theme::COLOR_BACKGROUND));
+	al_clear_to_color(Theme::getColor(Theme::Color::Background));
 
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
-		int32_t face = Theme::COLOR_FACE;
+		Theme::Color face = Theme::Color::Face;
 
-		if (this->m_cell[index].status == Grid::CellStatus::StatusHover)
+		if (index == inside)
 		{
-			face = Theme::COLOR_HOVER;
+			face = Theme::Color::Hover;
 		}
 
 		al_draw_filled_rectangle(this->m_cell[index].x, this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(face));
-		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
-		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_DARK), LINE_THICKNESS);
-		al_draw_line(this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
-		al_draw_line((this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::COLOR_LIGHT), LINE_THICKNESS);
+		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, Theme::getColor(Theme::Color::Dark), LINE_THICKNESS);
+		al_draw_line(this->m_cell[index].x, this->m_cell[index].y, this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::Color::Dark), LINE_THICKNESS);
+		al_draw_line(this->m_cell[index].x, (this->m_cell[index].y + this->m_cell[index].height - 1), (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::Color::Light), LINE_THICKNESS);
+		al_draw_line((this->m_cell[index].x + this->m_cell[index].width - 1), this->m_cell[index].y, (this->m_cell[index].x + this->m_cell[index].width - 1), (this->m_cell[index].y + this->m_cell[index].height - 1), Theme::getColor(Theme::Color::Light), LINE_THICKNESS);
 
 		if (this->getCell(this->m_grid, index) != Grid::CellType::Empty)
 		{
-			Sprites::SpriteList sp = Sprites::SpriteList(int32_t(Sprites::SpriteList::Human) + int32_t(this->getCell(this->m_grid, index)) - 1);
+			Sprites::SpriteList sp = Sprites::SpriteList(static_cast<int32_t>(Sprites::SpriteList::Human) + static_cast<int32_t>(this->getCell(this->m_grid, index)) - 1);
 
 			al_draw_bitmap(Sprites::getSprite(sp), this->m_cell[index].x, this->m_cell[index].y, 0);
 		}
 	}
 }
 
-int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y)
+int32_t Grid::isInsideCell(int32_t mouse_x, int32_t mouse_y) const
 {
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
-		this->m_cell[index].status = CellStatus::StatusNormal;
-
-		if (this->getCell(this->m_grid, index) == Grid::CellType::Empty &&
-			mouse_x >= this->m_cell[index].x &&
+		if (mouse_x >= this->m_cell[index].x &&
 			mouse_x < (this->m_cell[index].x + this->m_cell[index].width) &&
 			mouse_y >= this->m_cell[index].y &&
 			mouse_y < (this->m_cell[index].y + this->m_cell[index].height))
 		{
-			this->m_cell[index].status = CellStatus::StatusHover;
 			return index;
 		}
 	}
@@ -165,7 +169,7 @@ void Grid::setCell(int32_t& grid, int32_t cellNumber, Grid::CellType type)
 {
 	int32_t nullValue = 0b11;
 	grid &= ~(nullValue << (2 * cellNumber));
-	grid |= (int32_t(type) << (2 * cellNumber));
+	grid |= (static_cast<int32_t>(type) << (2 * cellNumber));
 }
 
 Grid::CellType Grid::getCell(int32_t grid, int32_t cellNumber)
@@ -173,7 +177,7 @@ Grid::CellType Grid::getCell(int32_t grid, int32_t cellNumber)
 	return Grid::CellType((grid >> (2 * cellNumber)) & 0b11);
 }
 
-bool Grid::isTie()
+bool Grid::isTie() const
 {
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
@@ -235,25 +239,26 @@ Grid::GridValue Grid::evaluateGrid(int32_t grid)
 	// if all 3 cells in each combination ANDed together then they match and it is a win
 	for (int32_t i = 0; i < numberOfWins; ++i)
 	{
-		if (int32_t(Grid::getCell(grid, triplets[i].p1)) &
-			int32_t(Grid::getCell(grid, triplets[i].p2)) &
-			int32_t(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[int32_t(Grid::getCell(grid, triplets[i].p1)) - int32_t(CellType::Human)];
+		if (static_cast<int32_t>(Grid::getCell(grid, triplets[i].p1)) &
+			static_cast<int32_t>(Grid::getCell(grid, triplets[i].p2)) &
+			static_cast<int32_t>(Grid::getCell(grid, triplets[i].p3))) return winOutcomes[static_cast<int32_t>(Grid::getCell(grid, triplets[i].p1)) - static_cast<int32_t>(CellType::Human)];
 	}
 	return GridValue::Undecided;
 }
 
-int32_t Grid::findComputerMove()
+int32_t Grid::findComputerMove() const
 {
 	int32_t move = -1;
 	int32_t min = 10000;
+	int32_t temp = this->m_grid;
 
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
 	{
-		if (Grid::getCell(this->m_grid, index) == Grid::CellType::Empty)
+		if (Grid::getCell(temp, index) == Grid::CellType::Empty)
 		{
-			Grid::setCell(this->m_grid, index, Grid::CellType::Computer);
-			int32_t value = Grid::findMaximum(this->m_grid);
-			Grid::setCell(this->m_grid, index, Grid::CellType::Empty);
+			Grid::setCell(temp, index, Grid::CellType::Computer);
+			int32_t value = Grid::findMaximum(temp);
+			Grid::setCell(temp, index, Grid::CellType::Empty);
 
 			if (value < min)
 			{
@@ -273,7 +278,7 @@ int32_t Grid::findMinimum(int32_t grid)
 
 	if (value != GridValue::Undecided)
 	{
-		return int32_t(value);
+		return static_cast<int32_t>(value);
 	}
 
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
@@ -296,7 +301,7 @@ int32_t Grid::findMaximum(int32_t grid)
 
 	if (value != GridValue::Undecided)
 	{
-		return int32_t(value);
+		return static_cast<int32_t>(value);
 	}
 
 	for (int32_t index = 0; index < (Grid::gridColumnCount * Grid::gridRowCount); ++index)
@@ -310,4 +315,9 @@ int32_t Grid::findMaximum(int32_t grid)
 	}
 
 	return max;
+}
+
+void Grid::reset()
+{
+	this->m_grid = 0;
 }

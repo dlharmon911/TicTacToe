@@ -59,18 +59,46 @@ namespace TicTacToe
 		int32_t loop();
 
 		/**
-		Output to the screen
+		Output to the display
 		@param none
 		@return none
 		*/
-		void drawGameStatus();
+		void draw() const;
 
 		/**
 		Output to the screen
 		@param none
 		@return none
 		*/
-		void draw();
+		void drawStatus() const;
+
+		/**
+		Output game grid to the display
+		@param none
+		@return none
+		*/
+		void drawGame() const;
+
+		/**
+		Output title screen to the display
+		@param none
+		@return none
+		*/
+		void drawTitle() const;
+
+		/**
+		Output help screen to the display
+		@param none
+		@return none
+		*/
+		void drawAbout() const;
+
+		/**
+		Output help screen to the display
+		@param none
+		@return none
+		*/
+		void drawHelp() const;
 
 		/**
 		Process all logic
@@ -86,16 +114,26 @@ namespace TicTacToe
 		*/
 		void processInput();
 
+		/**
+		Draws a framed text box with given text
+		@param text - vector of strings
+		@return none
+		*/
+		void drawTextBox(const std::vector<std::string>& text) const;
+
 		enum class GameState
 		{
-			StateUndefined,
-			StateInitializing,
-			StateTitleScreen,
-			StateContinueScreen,
-			StateShuttingdown,
-			StatePlayerX,
-			StatePlayerO,
-			StateGameOver
+			Undefined,
+			Initializing,
+			TitleScreen,
+			HelpScreen,
+			AboutScreen,
+			Shuttingdown,
+			PlayerXTurn,
+			PlayerOTurn,
+			PlayerXWin,
+			PlayerOWin,
+			Tie
 		};
 
 		ALLEGRO_DISPLAY* m_display;
@@ -113,21 +151,22 @@ namespace TicTacToe
 
 		enum class TitleOptions
 		{
-			OptionNew,
-			OptionOptions,
-			OptionQuit,
-			OptionContinue,
-			OptionCount
+			New,
+			Help,
+			About,
+			Quit,
+			Continue,
+			Count
 		};
 		TitleOptions m_option;
 
-		static const char* optionText[int32_t(TitleOptions::OptionCount)];
+		static const std::string optionText[static_cast<int32_t>(TitleOptions::Count)];
 
 		static const int32_t screenWidth;
 		static const int32_t screenHeight;
 		static const double logicRate;
-		static const char* appTitle;
-		static const char* author;
+		static const std::string appTitle;
+		static const std::string author;
 		static const int32_t gridWidth;
 		static const int32_t gridHeight;
 	};

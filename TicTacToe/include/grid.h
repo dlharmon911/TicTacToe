@@ -37,10 +37,11 @@ namespace TicTacToe
 
 		/**
 		Draw the grid to the display
-		@param none
+		@param mouse_x - x coord of mouse
+		@param mouse_y - y coord of mouse
 		@return none
 		*/
-		void drawGrid() const;
+		void drawGrid(int32_t mouse_x, int32_t mouse_y) const;
 
 		/**
 		Check to see if mouse coords are inside an empty cell
@@ -48,7 +49,7 @@ namespace TicTacToe
 		@param mouse_y - y coord of mouse
 		@return which cell is inside or negative value if not
 		*/
-		int32_t isInsideCell(int32_t mouse_x, int32_t mouse_y);
+		int32_t isInsideCell(int32_t mouse_x, int32_t mouse_y) const;
 
 		enum class CellType
 		{
@@ -56,6 +57,13 @@ namespace TicTacToe
 			Human,
 			Computer
 		};
+
+		/**
+		IS the game currently playing
+		@param none
+		@return true if no moves have been played, otherwise false
+		*/
+		bool isInPlay() const;
 
 		/**
 		Returns the width of cell[0]
@@ -73,11 +81,18 @@ namespace TicTacToe
 
 		/**
 		Sets the value of the cell
-		@param cell - the cell to be changed
-		@param type - the type of cell
+		@param cell - cell index
+		@param type - the new type of cell
 		@return none
 		*/
 		void setCell(int32_t cell, CellType type);
+
+		/**
+		Gets the value of the cell
+		@param cell - cell index
+		@return the cell type
+		*/
+		CellType getCell(int32_t cell) const;
 
 		enum class GridValue
 		{
@@ -87,21 +102,48 @@ namespace TicTacToe
 			Undecided = -1
 		};
 
-		bool isTie();
-		Grid::GridValue evaluateGrid() const;
-		int32_t findComputerMove();
+		/**
+		Determine if any moves left
+		@param none
+		@return true if available moves, false on no moves left
+		*/
+		bool isTie() const;
 
+		/**
+		Determine the value of the current grid
+		@param none
+		@return 10 if human won, -10 if computer won, 0 if tie, -1 if undecided and moves left
+		*/
+		Grid::GridValue evaluateGrid() const;
+
+		/**
+		Calculate the next move for the computer
+		@param none
+		@return the cell number or -1 if no moves left
+		*/
+		int32_t findComputerMove() const;
+
+		/**
+		Reset the grid back to starting point
+		@param none
+		@return none
+		*/
+		void reset();
 	private:
 
+		/**
+		Calculate the minimum value for every possible set of moves
+		@param none
+		@return the minimum value
+		*/
 		static int32_t findMinimum(int32_t grid);
+
+		/**
+		Calculate the maximum value for every possible set of moves
+		@param none
+		@return the maximum value
+		*/
 		static int32_t findMaximum(int32_t grid);
-
-		enum class CellStatus
-		{
-			StatusNormal,
-			StatusHover
-		};
-
 
 		/**
 		Evaluate the value of the grid
@@ -137,7 +179,6 @@ namespace TicTacToe
 			int32_t y;
 			int32_t width;
 			int32_t height;
-			CellStatus status;
 		} Cell;
 
 		int32_t m_grid;

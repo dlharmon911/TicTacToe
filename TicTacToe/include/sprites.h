@@ -38,7 +38,7 @@ namespace TicTacToe
 		Sprites();
 		~Sprites();
 
-		static ALLEGRO_BITMAP* m_sprites[int32_t(Sprites::SpriteList::Count)];
+		static ALLEGRO_BITMAP* m_sprites[static_cast<int32_t>(Sprites::SpriteList::Count)];
 	};
 }
 

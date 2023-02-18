@@ -8,23 +8,23 @@ namespace TicTacToe
 	class Theme
 	{
 	public:
-		enum ColorList
+		enum class Color
 		{
-			COLOR_BACKGROUND,
-			COLOR_LIGHT,
-			COLOR_FACE,
-			COLOR_HOVER,
-			COLOR_DARK,
-			COLOR_X_FACE,
-			COLOR_X_BORDER,
-			COLOR_O_FACE,
-			COLOR_O_BORDER,
-			COLOR_TITLE_FACE,
-			COLOR_TITLE_BORDER,
-			COLOR_COUNT
+			Background,
+			Light,
+			Face,
+			Hover,
+			Dark,
+			FaceHuman,
+			FaceBorder,
+			ComputerFace,
+			ComputerBorder,
+			TitleFace,
+			TitleBorder,
+			Count
 		};
 
-		static ALLEGRO_COLOR getColor(int32_t index);
+		static ALLEGRO_COLOR getColor(Color color);
 
 		enum class ThemeOptions
 		{
@@ -48,7 +48,7 @@ namespace TicTacToe
 
 		static ALLEGRO_COLOR makeColor(int32_t color);
 
-		static const int32_t colors[Theme::COLOR_COUNT];
+		static const int32_t colors[static_cast<int32_t>(Theme::Color::Count)];
 		static ThemeOptions m_theme;
 	};
 }

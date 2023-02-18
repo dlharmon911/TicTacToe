@@ -7,7 +7,7 @@
 
 using namespace TicTacToe;
 
-ALLEGRO_BITMAP* Sprites::m_sprites[int32_t(Sprites::SpriteList::Count)] = { nullptr, nullptr, nullptr };
+ALLEGRO_BITMAP* Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Count)] = { nullptr, nullptr, nullptr };
 
 Sprites::Sprites() {}
 
@@ -30,28 +30,28 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	}
 
 	const char* title = "Tic Tac Toe";
-	Sprites::m_sprites[int32_t(Sprites::SpriteList::Title)] = al_create_bitmap(al_get_text_width(font, title) + 4, al_get_font_line_height(font) + 4);
+	Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Title)] = al_create_bitmap(al_get_text_width(font, title) + 4, al_get_font_line_height(font) + 4);
 
-	if (!Sprites::m_sprites[int32_t(Sprites::SpriteList::Title)])
+	if (!Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Title)])
 	{
 		al_destroy_font(font);
 		return false;
 	}
 
-	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::Title)]);
+	al_set_target_bitmap(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Title)]);
 	al_clear_to_color(al_map_rgb(255, 0, 255));
 
 	for (int32_t j = -1; j <= 1; ++j)
 	{
 		for (int32_t i = -1; i <= 1; ++i)
 		{
-			al_draw_text(font, Theme::getColor(Theme::ColorList::COLOR_TITLE_BORDER), 2 + i, 2 + j, 0, title);
+			al_draw_text(font, Theme::getColor(Theme::Color::TitleBorder), 2 + i, 2 + j, 0, title);
 		}
 	}
 
-	al_draw_text(font, Theme::getColor(Theme::ColorList::COLOR_TITLE_FACE), 2, 2, 0, title);
+	al_draw_text(font, Theme::getColor(Theme::Color::TitleFace), 2, 2, 0, title);
 
-	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::Title)], al_map_rgb(255, 0, 255));
+	al_convert_mask_to_alpha(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Title)], al_map_rgb(255, 0, 255));
 
 	al_destroy_font(font);
 
@@ -61,10 +61,10 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	const float LINE_THICKNESS = 2.0f;
 	const int32_t X_CENTER = cell_width >> 1;
 	const int32_t Y_CENTER = cell_height >> 1;
-	const float X_THICKNESS_WIDTH = float(cell_width >> 3);
-	const float X_THICKNESS_HEIGHT = float(cell_height >> 3);
-	const float O_THICKNESS_WIDTH = float(cell_width >> 3) * 0.8f;
-	const float O_THICKNESS_HEIGHT = float(cell_height >> 3) * 0.8f;
+	const float X_THICKNESS_WIDTH = static_cast<float>(cell_width >> 3);
+	const float X_THICKNESS_HEIGHT = static_cast<float>(cell_height >> 3);
+	const float O_THICKNESS_WIDTH = static_cast<float>(cell_width >> 3) * 0.8f;
+	const float O_THICKNESS_HEIGHT = static_cast<float>(cell_height >> 3) * 0.8f;
 
 	enum Padding
 	{
@@ -77,18 +77,18 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 
 	const float cell_padding[PADDING_COUNT] =
 	{
-		float(cell_width >> 4),
-		float(cell_width >> 4),
-		float(cell_height >> 4),
-		float(cell_height >> 4)
+		static_cast<float>(cell_width >> 4),
+		static_cast<float>(cell_width >> 4),
+		static_cast<float>(cell_height >> 4),
+		static_cast<float>(cell_height >> 4)
 	};
 
 	// create bitmaps
 	for (int32_t i = 0; i < 2; ++i)
 	{
 		// create Human
-		Sprites::m_sprites[int32_t(Sprites::SpriteList::Human) + i] = al_create_bitmap(cell_width, cell_height);
-		if (!Sprites::m_sprites[int32_t(Sprites::SpriteList::Human) + i])
+		Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Human) + i] = al_create_bitmap(cell_width, cell_height);
+		if (!Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Human) + i])
 		{
 			al_set_target_bitmap(target);
 			return false;
@@ -96,7 +96,7 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	}
 
 	// create Human
-	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::Human)]);
+	al_set_target_bitmap(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Human)]);
 	al_clear_to_color(al_map_rgb(255, 0, 255));
 
 	Point points[12] =
@@ -149,7 +149,7 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	{
 		al_draw_filled_triangle(points[triangles[t].p1].x, points[triangles[t].p1].y,
 			points[triangles[t].p2].x, points[triangles[t].p2].y,
-			points[triangles[t].p3].x, points[triangles[t].p3].y, Theme::getColor(Theme::COLOR_X_FACE));
+			points[triangles[t].p3].x, points[triangles[t].p3].y, Theme::getColor(Theme::Color::FaceHuman));
 	}
 
 	// starting at point zero, draw lines to the next point. 
@@ -159,31 +159,31 @@ bool Sprites::generateSprites(int32_t cell_width, int32_t cell_height)
 	for (int32_t l = 0; l < 12; ++l)
 	{
 		al_draw_line(points[p].x, points[p].y,
-			points[lines[l]].x, points[lines[l]].y, Theme::getColor(Theme::COLOR_X_BORDER), LINE_THICKNESS);
+			points[lines[l]].x, points[lines[l]].y, Theme::getColor(Theme::Color::FaceBorder), LINE_THICKNESS);
 		p = lines[l];
 	}
 
-	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::Human)], al_map_rgb(255, 0, 255));
+	al_convert_mask_to_alpha(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Human)], al_map_rgb(255, 0, 255));
 
 	/********************************************************************************
 	 * create Computer
 	 ********************************************************************************/
-	al_set_target_bitmap(Sprites::m_sprites[int32_t(Sprites::SpriteList::Computer)]);
+	al_set_target_bitmap(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Computer)]);
 	al_clear_to_color(al_map_rgb(255, 0, 255));
 
 	int ow = cell_width - (cell_padding[PADDING_LEFT] + cell_padding[PADDING_RIGHT]);
 	int oh = cell_height - (cell_padding[PADDING_TOP] + cell_padding[PADDING_BOTTOM]);
 
-	al_draw_filled_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::COLOR_O_FACE));
-	al_draw_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::COLOR_O_BORDER), LINE_THICKNESS);
+	al_draw_filled_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::Color::ComputerFace));
+	al_draw_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::Color::ComputerBorder), LINE_THICKNESS);
 
 	ow -= (2 * O_THICKNESS_WIDTH);
 	oh -= (2 * O_THICKNESS_HEIGHT);
 
 	al_draw_filled_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, al_map_rgb(255, 0, 255));
-	al_draw_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::COLOR_O_BORDER), LINE_THICKNESS);
+	al_draw_ellipse(X_CENTER, Y_CENTER, ow >> 1, oh >> 1, Theme::getColor(Theme::Color::ComputerBorder), LINE_THICKNESS);
 
-	al_convert_mask_to_alpha(Sprites::m_sprites[int32_t(Sprites::SpriteList::Computer)], al_map_rgb(255, 0, 255));
+	al_convert_mask_to_alpha(Sprites::m_sprites[static_cast<int32_t>(Sprites::SpriteList::Computer)], al_map_rgb(255, 0, 255));
 
 	al_set_target_bitmap(target);
 
@@ -194,7 +194,7 @@ bool Sprites::freeSprites()
 {
 	bool rv = false;
 
-	for (int32_t i = 0; i < int32_t(Sprites::SpriteList::Count); ++i)
+	for (int32_t i = 0; i < static_cast<int32_t>(Sprites::SpriteList::Count); ++i)
 	{
 		if (Sprites::m_sprites[i])
 		{
@@ -210,9 +210,9 @@ bool Sprites::freeSprites()
 
 ALLEGRO_BITMAP* Sprites::getSprite(SpriteList index)
 {
-	int32_t i = int32_t(index);
+	int32_t i = static_cast<int32_t>(index);
 
-	if (i < 0 || i >= int32_t(Sprites::SpriteList::Count))
+	if (i < 0 || i >= static_cast<int32_t>(Sprites::SpriteList::Count))
 	{
 		return nullptr;
 	}

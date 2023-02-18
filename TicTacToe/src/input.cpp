@@ -4,7 +4,7 @@ using namespace TicTacToe;
 
 Input::Input() : m_b(), m_x(-1), m_y(-1) 
 {
-	for (int32_t i = 0; i < int32_t(MouseButton::Count); ++i)
+	for (int32_t i = 0; i < static_cast<int32_t>(MouseButton::Count); ++i)
 	{
 		m_b[i] = false;
 	}
@@ -22,7 +22,7 @@ void Input::clear()
 	this->m_x = -1;
 	this->m_y = -1;
 
-	for (int32_t i = 0; i < int32_t(MouseButton::Count); ++i)
+	for (int32_t i = 0; i < static_cast<int32_t>(MouseButton::Count); ++i)
 	{
 		m_b[i] = false;
 	}
@@ -41,12 +41,12 @@ void Input::OnEventAxes(int32_t x, int32_t y)
 
 void Input::OnEventButtonDown(MouseButton button)
 {
-	this->m_b[int32_t(button)] = true;
+	this->m_b[static_cast<int32_t>(button)] = true;
 }
 
 void Input::OnEventButtonUp(MouseButton button)
 {
-	this->m_b[int32_t(button)] = false;
+	this->m_b[static_cast<int32_t>(button)] = false;
 }
 
 void Input::OnEventKeyDown(int32_t key)
@@ -77,7 +77,7 @@ int32_t Input::getY() const
 
 int32_t Input::getButton(MouseButton button) const
 {
-	return this->m_b[int32_t(button)];
+	return this->m_b[static_cast<int32_t>(button)];
 }
 
 int32_t Input::getKey(int32_t key) const

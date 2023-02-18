@@ -32,7 +32,7 @@ namespace TicTacToe
 	private:
 
 		bool m_keys[ALLEGRO_KEY_MAX];
-		bool m_b[int32_t(MouseButton::Count)];
+		bool m_b[static_cast<int32_t>(MouseButton::Count)];
 		int32_t m_x;
 		int32_t m_y;
 	};

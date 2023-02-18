@@ -11,16 +11,17 @@ using namespace TicTacToe;
 const int32_t App::screenWidth = 800;
 const int32_t App::screenHeight = 620;
 const double App::logicRate = 60.0;
-const char* App::appTitle = "Tic Tac Toe";
-const char* App::author = "Daniel Harmon";
+const std::string App::appTitle = "Tic Tac Toe";
+const std::string App::author = "Daniel Harmon";
 const int32_t App::gridWidth = 800;
 const int32_t App::gridHeight = 600;
-const char* App::optionText[int32_t(TitleOptions::OptionCount)] =
+const std::string App::optionText[static_cast<int32_t>(TitleOptions::Count)] =
 {
 	"New Game",
-	"Options",
+	"Help",
+	"About",
 	"Quit",
-	"Continue Game"
+	"Continue"
 };
 
 int32_t App::run(const std::vector<std::string>& argList)
@@ -47,9 +48,9 @@ App::App() :
 	m_dirty(true), 
 	m_counter(0), 
 	m_grid(), 
-	m_gameState(App::GameState::StateUndefined), 
+	m_gameState(GameState::Undefined), 
 	m_playerCountdown(0),
-	m_option(App::TitleOptions::OptionNew)
+	m_option(App::TitleOptions::New)
 {
 }
 
@@ -59,7 +60,7 @@ App::~App()
 
 int32_t App::initialize(const std::vector<std::string>& argList)
 {
-	this->m_gameState = App::GameState::StateInitializing;
+	this->m_gameState = GameState::Initializing;
 
 	std::cout << "Initialization Begin" << std::endl;
 
@@ -135,10 +136,11 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 	ALLEGRO_BITMAP* icon = al_load_bitmap("data\\images\\icon.png");
 	if (icon)
 	{
+		al_convert_mask_to_alpha(icon, al_map_rgb(255, 0, 255));
 		al_set_display_icon(this->m_display, icon);
 		al_destroy_bitmap(icon);
 	}
-	al_set_window_title(this->m_display, App::appTitle);
+	al_set_window_title(this->m_display, App::appTitle.c_str());
 
 	std::cout << "Creating Buffer Bitmap: ";
 	this->m_buffer = al_create_bitmap(App::screenWidth, App::screenHeight);
@@ -195,13 +197,11 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 
 	srand(time(nullptr));
 
-	al_hide_mouse_cursor(this->m_display);
-
 	al_start_timer(this->m_timer);
 
 	Theme::setTheme(Theme::ThemeOptions::ThemeWedding);
 
-	this->m_gameState = App::GameState::StateTitleScreen;
+	this->m_gameState = GameState::TitleScreen;
 	std::cout << "Initialization Complete" << std::endl << std::endl;
 	
 	return 0;
@@ -210,12 +210,7 @@ int32_t App::initialize(const std::vector<std::string>& argList)
 void App::shutdown()
 {
 	std::cout << std::endl << "Shutdown Begin" << std::endl;
-	this->m_gameState = App::GameState::StateShuttingdown;
-
-	if (this->m_display)
-	{
-		al_hide_mouse_cursor(this->m_display);
-	}
+	this->m_gameState = GameState::Shuttingdown;
 
 	if (Sprites::freeSprites())
 	{
@@ -285,110 +280,193 @@ int32_t App::loop()
 	return 0;
 }
 
-void App::draw()
+void App::draw() const
 {
-	static const char* prompt = "-> ";
-	static const char* by = "by ";
 
 	al_set_target_bitmap(this->m_buffer);
 
-	al_clear_to_color(Theme::getColor(Theme::ColorList::COLOR_BACKGROUND));
+	al_clear_to_color(Theme::getColor(Theme::Color::Background));
 
-	if (this->m_gameState == App::GameState::StateTitleScreen || this->m_gameState == App::GameState::StateContinueScreen)
+	if (this->m_gameState == GameState::TitleScreen || 
+		this->m_gameState == GameState::HelpScreen ||
+		this->m_gameState == GameState::AboutScreen)
 	{
-		static float w = float(App::screenWidth) / 3.0f;
-		static float h = float(App::screenHeight) / 3.0f;
-
-		static float bw = al_get_text_width(this->m_font, by);
-		static float aw = al_get_text_width(this->m_font, App::author);
-		static float bx = (w - (bw + aw)) / 2.0f;
-
-		ALLEGRO_BITMAP* b = Sprites::getSprite(Sprites::SpriteList::Title);
-		float dx = w * 0.1f;
-		float dy = h * 0.1f;
-		float dw = w * 0.8f;
-		float dh = h * 0.4f;
-
-		al_draw_scaled_bitmap(b, 0, 0, al_get_bitmap_width(b), al_get_bitmap_height(b), dx, dy, dw, dh, 0);
-
-		float th = float(al_get_font_line_height(this->m_font)) * 1.5f;
-		float tx = w / 2.0f;
-		float ty = dy + dh + th * 3.0f;
-		
-		for (int32_t i = int32_t(App::TitleOptions::OptionNew); i <= int32_t(App::TitleOptions::OptionQuit); ++i)
-		{
-			const char* text = App::optionText[i];
-			if (i == int32_t(App::TitleOptions::OptionNew) && this->m_gameState == App::GameState::StateContinueScreen)
-			{
-				text = App::optionText[int32_t(App::TitleOptions::OptionContinue)];
-			}
-			ALLEGRO_COLOR color = Theme::getColor(Theme::ColorList::COLOR_LIGHT);
-			if (i == int32_t(this->m_option))
-			{
-				color = Theme::getColor(Theme::ColorList::COLOR_HOVER);
-				al_draw_text(this->m_font, color, tx - al_get_text_width(this->m_font, prompt), ty + (float(i) * th), 0, prompt);
-			}
-			al_draw_text(this->m_font, color, tx, ty + (float(i) * th), 0, text);
-		}
-		al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), bx, h - (float(al_get_font_line_height(this->m_font)) * 1.5f), ALLEGRO_ALIGN_LEFT, by);
-		al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), bx + bw, h - (float(al_get_font_line_height(this->m_font)) * 1.5f), ALLEGRO_ALIGN_LEFT, App::author);
-		al_set_target_backbuffer(this->m_display);
-		al_draw_scaled_bitmap(this->m_buffer, 0, 0, w, h, 0, 0, float(App::screenWidth), float(App::screenHeight), 0);
+		this->drawTitle();
 	}
 	else
 	{
-		this->m_grid.drawGrid();
-		this->drawGameStatus();
-		al_set_target_backbuffer(this->m_display);
-		al_draw_bitmap(this->m_buffer, 0, 0, 0);
+		this->drawGame();
+	}
+}
+
+void App::drawGame() const
+{
+	int32_t x = this->m_input.getX();
+	int32_t y = this->m_input.getY();
+
+	if (this->m_gameState == GameState::PlayerXWin || 
+		this->m_gameState == GameState::PlayerOWin || 
+		this->m_gameState == GameState::Tie )
+	{
+		x = -100;
 	}
 
+	this->m_grid.drawGrid(x, y);
+	this->drawStatus();
+	al_set_target_backbuffer(this->m_display);
+	al_draw_bitmap(this->m_buffer, 0, 0, 0);
 	al_flip_display();
 }
 
-void App::drawGameStatus()
+void App::drawTitle() const
+{
+	static const std::string prompt = "-> ";
+	static const std::string by = "by ";
+
+	static float w = static_cast<float>(App::screenWidth) / 3.0f;
+	static float h = static_cast<float>(App::screenHeight) / 3.0f;
+
+	static float bw = al_get_text_width(this->m_font, by.c_str());
+	static float aw = al_get_text_width(this->m_font, App::author.c_str());
+	static float bx = (w - (bw + aw)) / 2.0f;
+
+	static ALLEGRO_BITMAP* b = Sprites::getSprite(Sprites::SpriteList::Title);
+	static float dx = w * 0.1f;
+	static float dy = h * 0.1f;
+	static float dw = w * 0.8f;
+	static float dh = h * 0.4f;
+
+	static float th = static_cast<float>(al_get_font_line_height(this->m_font)) * 1.5f;
+	static float tx = w / 2.0f;
+	static float ty = dy + dh + th * 3.0f;
+
+	al_draw_scaled_bitmap(b, 0, 0, al_get_bitmap_width(b), al_get_bitmap_height(b), dx, dy, dw, dh, 0);
+
+	for (int32_t i = static_cast<int32_t>(App::TitleOptions::New); i <= static_cast<int32_t>(App::TitleOptions::Quit); ++i)
+	{
+		std::string text = App::optionText[i];
+		if (i == static_cast<int32_t>(App::TitleOptions::New) && this->m_grid.isInPlay())
+		{
+			text = App::optionText[static_cast<int32_t>(App::TitleOptions::Continue)];
+		}
+		ALLEGRO_COLOR color = Theme::getColor(Theme::Color::Light);
+		if (i == static_cast<int32_t>(this->m_option))
+		{
+			color = Theme::getColor(Theme::Color::Hover);
+			al_draw_text(this->m_font, color, tx, ty + (static_cast<float>(i) * th), ALLEGRO_ALIGN_RIGHT, prompt.c_str());
+		}
+		al_draw_text(this->m_font, color, tx, ty + (static_cast<float>(i) * th), ALLEGRO_ALIGN_LEFT, text.c_str());
+	}
+	al_draw_text(this->m_font, Theme::getColor(Theme::Color::Light), bx, h - (static_cast<float>(al_get_font_line_height(this->m_font)) * 1.5f), ALLEGRO_ALIGN_LEFT, (by + App::author).c_str());
+
+	if (this->m_gameState == GameState::HelpScreen)
+	{
+		this->drawHelp();
+	}
+
+	if (this->m_gameState == GameState::AboutScreen)
+	{
+		this->drawAbout();
+	}
+
+	al_set_target_backbuffer(this->m_display);
+	al_draw_scaled_bitmap(this->m_buffer, 0, 0, w, h, 0, 0, static_cast<float>(App::screenWidth), static_cast<float>(App::screenHeight), 0);
+	al_flip_display();
+}
+
+void App::drawAbout() const
+{
+	const int32_t lines = 3;
+	const std::string text[lines] =
+	{
+		std::string("About ") + App::appTitle,
+		"",
+		std::string("by ") + App::author
+	};
+	static std::vector<std::string> v;
+
+	v.clear();
+
+	for (int32_t i = 0; i < lines; ++i)
+	{
+		v.push_back(text[i]);
+	}
+
+	this->drawTextBox(v);
+}
+
+void App::drawHelp() const
+{
+	const int32_t lines = 12;
+	const std::string text[lines] =
+	{
+		App::appTitle + std::string(" Help:"),
+		"",
+		"[ or ] to change theme",
+		"",
+		"Take turns with the",
+		"computer. Place your",
+		"mark in an empty square.",
+		"Win the game with 3 in", 
+		"a row (row, column, or",
+		"diagonal).",
+		"",
+		"Good luck!",
+	};
+
+	static std::vector<std::string> v;
+
+	v.clear();
+
+	for (int32_t i = 0; i < lines; ++i)
+	{
+		v.push_back(text[i]);
+	}
+
+	this->drawTextBox(v);
+}
+
+
+void App::drawStatus() const
 {
 	static const char* prompt = "Status: ";
-	static float cw = float(al_get_text_width(this->m_font, "W"));
-	static float ch = float(al_get_font_line_height(this->m_font));
+	static float cw = static_cast<float>(al_get_text_width(this->m_font, "W"));
+	static float ch = static_cast<float>(al_get_font_line_height(this->m_font));
 	static float tx = cw / 2.0f;
-	static float ty = float(this->gridHeight) + (ch / 2.0f);
-	static float px = tx + float(al_get_text_width(this->m_font, prompt));
-	static char output[256] = "";
-	static const char* text[3] =
+	static float ty = static_cast<float>(this->gridHeight) + (ch / 2.0f);
+	static float px = tx + static_cast<float>(al_get_text_width(this->m_font, prompt));
+	static const std::string text[5] =
 	{
 		"Your Turn",
 		"Computer Turn",
-		"Game Over"
+		"You Won",
+		"Computer Won",
+		"Cats Game"
 	};
 
-	int32_t t = int32_t(this->m_gameState) - int32_t(App::GameState::StatePlayerX);
+	int32_t t = static_cast<int32_t>(this->m_gameState) - static_cast<int32_t>(GameState::PlayerXTurn);
 
-	strncpy_s(output, text[t], 256);
+	al_draw_text(this->m_font, Theme::getColor(Theme::Color::Light), tx + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, prompt);
+	al_draw_text(this->m_font, Theme::getColor(Theme::Color::Hover), tx, ty, ALLEGRO_ALIGN_LEFT, prompt);
 
-	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), tx + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, prompt);
-	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_HOVER), tx, ty, ALLEGRO_ALIGN_LEFT, prompt);
-
-	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_LIGHT), px + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, output);
-	al_draw_text(this->m_font, Theme::getColor(Theme::ColorList::COLOR_HOVER), px, ty, ALLEGRO_ALIGN_LEFT, output);
-
+	al_draw_text(this->m_font, Theme::getColor(Theme::Color::Light), px + 1.0f, ty + 1.0f, ALLEGRO_ALIGN_LEFT, text[t].c_str());
+	al_draw_text(this->m_font, Theme::getColor(Theme::Color::Hover), px, ty, ALLEGRO_ALIGN_LEFT, text[t].c_str());
 }
 
 void App::doLogic()
 {
-	if (this->m_gameState == App::GameState::StateTitleScreen || this->m_gameState == App::GameState::StateContinueScreen)
+	if (this->m_gameState == GameState::TitleScreen)
 	{
 
 	}
 	else
 	{
-
 		if (this->m_playerCountdown > 0)
 		{
 			--this->m_playerCountdown;
 		}
 
-		if (this->m_gameState == App::GameState::StatePlayerO && this->m_playerCountdown == 0)
+		if (this->m_gameState == GameState::PlayerOTurn && this->m_playerCountdown == 0)
 		{
 			int32_t cell = this->m_grid.findComputerMove();
 			this->m_grid.setCell(cell, Grid::CellType::Computer);
@@ -397,11 +475,16 @@ void App::doLogic()
 
 			if (value == Grid::GridValue::Undecided)
 			{
-				this->m_gameState = App::GameState::StatePlayerX;
+				this->m_gameState = GameState::PlayerXTurn;
 			}
 			else
 			{
-				this->m_gameState = App::GameState::StateGameOver;
+				switch (value)
+				{
+				case Grid::GridValue::Computer: this->m_gameState = GameState::PlayerOWin; break;
+				case Grid::GridValue::Human: this->m_gameState = GameState::PlayerXWin; break;
+				default: this->m_gameState = GameState::Tie; break;
+				}
 			}
 
 			this->m_dirty = true;
@@ -409,15 +492,11 @@ void App::doLogic()
 
 
 
-		if (this->m_gameState == App::GameState::StatePlayerX)
+		if (this->m_gameState == GameState::PlayerXTurn)
 		{
 			int32_t insideCell = this->m_grid.isInsideCell(this->m_input.getX(), this->m_input.getY());
 
-			if (this->m_input.getButton(Input::MouseButton::Left))
-			{
-			}
-
-			if (insideCell >= 0)
+			if (insideCell >=0 && this->m_grid.getCell(insideCell) == Grid::CellType::Empty)
 			{
 				if (this->m_input.getButton(Input::MouseButton::Left))
 				{
@@ -427,12 +506,17 @@ void App::doLogic()
 
 					if (value == Grid::GridValue::Undecided)
 					{
-						this->m_gameState = App::GameState::StatePlayerO;
+						this->m_gameState = GameState::PlayerOTurn;
 						this->m_playerCountdown = 60;// (60 * (rand() % 3));
 					}
 					else
 					{
-						this->m_gameState = App::GameState::StateGameOver;
+						switch (value)
+						{
+						case Grid::GridValue::Computer: this->m_gameState = GameState::PlayerOWin; break;
+						case Grid::GridValue::Human: this->m_gameState = GameState::PlayerXWin; break;
+						default: this->m_gameState = GameState::Tie; break;
+						}
 					}
 
 					this->m_dirty = true;
@@ -502,62 +586,97 @@ void App::processInput()
 			this->m_dirty = true;
 			switch (this->m_gameState)
 			{
-			case App::GameState::StatePlayerX:
+			case GameState::PlayerXWin:
+			case GameState::PlayerOWin:
+			{
+				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				{
-					if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-					{
-						this->m_gameState = App::GameState::StateContinueScreen;
-						this->m_option = App::TitleOptions::OptionNew;
-						al_hide_mouse_cursor(this->m_display);
-					}
-				} break;
-
-			case App::GameState::StateTitleScreen:
-			case App::GameState::StateContinueScreen:
+					this->m_grid.reset();
+					this->m_gameState = GameState::TitleScreen;
+				}
+			} break;
+			case GameState::PlayerXTurn:
+			case GameState::PlayerOTurn:
+			{
+				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 				{
-					if (event.keyboard.keycode == ALLEGRO_KEY_ENTER ||
-						event.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
-					{
-						if (this->m_option == App::TitleOptions::OptionNew)
-						{
-							this->m_gameState = App::GameState::StatePlayerX;
-							al_show_mouse_cursor(this->m_display);
-						}
-						if (this->m_option == App::TitleOptions::OptionQuit)
-						{
-							this->m_kill = true;
-						}
-					}
+					this->m_gameState = GameState::TitleScreen;
+				}
+			} break;
 
-					if (event.keyboard.keycode == ALLEGRO_KEY_UP ||
-						event.keyboard.keycode == ALLEGRO_KEY_PAD_8)
+			case GameState::HelpScreen:
+			case GameState::AboutScreen:
+			{
+				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				{
+					this->m_gameState = GameState::TitleScreen;
+				}
+			} break;
+
+			case GameState::TitleScreen:
+			{
+				if (event.keyboard.keycode == ALLEGRO_KEY_ENTER ||
+					event.keyboard.keycode == ALLEGRO_KEY_PAD_ENTER)
+				{
+					switch (this->m_option)
 					{
-						if (this->m_option == App::TitleOptions::OptionNew)
-						{
-							this->m_option = App::TitleOptions::OptionQuit;
-						}
-						else
-						{
-							this->m_option = App::TitleOptions(int32_t(this->m_option) - 1);
-						}
-					}
-					if (event.keyboard.keycode == ALLEGRO_KEY_DOWN ||
-						event.keyboard.keycode == ALLEGRO_KEY_PAD_2)
+					case App::TitleOptions::New:
 					{
-						if (this->m_option == App::TitleOptions::OptionQuit)
-						{
-							this->m_option = App::TitleOptions::OptionNew;
-						}
-						else
-						{
-							this->m_option = App::TitleOptions(int32_t(this->m_option) + 1);
-						}
-					}
-					if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+						this->m_gameState = GameState::PlayerXTurn;
+						al_show_mouse_cursor(this->m_display);
+					} break;
+					case App::TitleOptions::Help:
+					{
+						this->m_gameState = GameState::HelpScreen;
+					} break;
+					case App::TitleOptions::About:
+					{
+						this->m_gameState = GameState::AboutScreen;
+					} break;
+					case App::TitleOptions::Quit:
 					{
 						this->m_kill = true;
+					} break;
 					}
-				} break;
+				}
+
+				if (event.keyboard.keycode == ALLEGRO_KEY_UP ||
+					event.keyboard.keycode == ALLEGRO_KEY_PAD_8)
+				{
+					if (this->m_option == App::TitleOptions::New)
+					{
+						this->m_option = App::TitleOptions::Quit;
+					}
+					else
+					{
+						this->m_option = App::TitleOptions(static_cast<int32_t>(this->m_option) - 1);
+					}
+				}
+				if (event.keyboard.keycode == ALLEGRO_KEY_DOWN ||
+					event.keyboard.keycode == ALLEGRO_KEY_PAD_2)
+				{
+					if (this->m_option == App::TitleOptions::Quit)
+					{
+						this->m_option = App::TitleOptions::New;
+					}
+					else
+					{
+						this->m_option = App::TitleOptions(static_cast<int32_t>(this->m_option) + 1);
+					}
+				}
+				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				{
+					this->m_kill = true;
+				}
+			} break;
+			case GameState::Tie:
+			{
+				if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+				{
+					this->m_gameState = GameState::TitleScreen;
+					this->m_grid.reset();
+				}
+			} break;
 			default: break;
 			}
 		} break;
@@ -579,5 +698,47 @@ void App::processInput()
 			this->m_kill = true;
 		} break;
 		}
+	}
+}
+
+void App::drawTextBox(const std::vector<std::string>& text) const
+{
+	const float LINE_THICKNESS = 2.0f;
+	static float sw = static_cast<float>(App::screenWidth) / 3.0f;
+	static float sh = static_cast<float>(App::screenHeight) / 3.0f;
+
+	float fh = static_cast<float>(al_get_font_line_height(this->m_font));
+	float fw = static_cast<float>(al_get_text_width(this->m_font, "W"));
+	float cell_padding[4] =
+	{
+		fh * 0.5f,
+		fh * 0.5f,
+		fw * 0.5f,
+		fw * 0.5f
+	};
+	float text_spacing = fh * 0.125;
+	float tw = 0;
+	float th = cell_padding[2] + cell_padding[3] + (static_cast<float>(text.size()) * fh) + (static_cast<float>(text.size() - 1) * text_spacing);
+
+	for (int32_t i = 0; i < text.size(); ++i)
+	{
+		tw = std::max(tw, static_cast<float>(al_get_text_width(this->m_font, text[i].c_str())));
+	}
+
+	tw = tw + cell_padding[0] + cell_padding[1];
+
+	float x = (sw - tw) / 2.0f;
+	float y = (sh - th) / 2.0f;
+
+
+	al_draw_filled_rectangle(x, y, (x + tw - 1), (y + th - 1), Theme::getColor(Theme::Color::Background));
+	al_draw_line(x, y, (x + tw - 1), y, Theme::getColor(Theme::Color::Light), LINE_THICKNESS);
+	al_draw_line(x, y, x, (y + th - 1), Theme::getColor(Theme::Color::Light), LINE_THICKNESS);
+	al_draw_line(x, (y + th - 1), (x + tw - 1), (y + th - 1), Theme::getColor(Theme::Color::Dark), LINE_THICKNESS);
+	al_draw_line((x + tw - 1), y, (x + tw - 1), (y + th - 1), Theme::getColor(Theme::Color::Dark), LINE_THICKNESS);
+
+	for (int32_t i = 0; i < text.size(); ++i)
+	{
+		al_draw_text(this->m_font, Theme::getColor(Theme::Color::Hover), x + (tw * 0.5f), y + cell_padding[1] + (i * (fh + text_spacing)), ALLEGRO_ALIGN_CENTRE, text[i].c_str());
 	}
 }

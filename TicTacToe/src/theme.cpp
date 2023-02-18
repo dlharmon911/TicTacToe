@@ -2,7 +2,7 @@
 
 using namespace TicTacToe;
 
-int32_t palette[int32_t(Theme::ThemeOptions::ThemeCount)][5] =
+int32_t palette[static_cast<int32_t>(Theme::ThemeOptions::ThemeCount)][5] =
 {
 	{0xdad7eb, 0x9c93c9, 0x6052a5, 0x383060, 0x100e1c}, // lilac
 	{0xdcb3c2, 0xc5809a, 0xb96786, 0xad4d72, 0x961b4a}, // berry
@@ -14,7 +14,7 @@ int32_t palette[int32_t(Theme::ThemeOptions::ThemeCount)][5] =
 };
 
 
-const int32_t Theme::colors[Theme::COLOR_COUNT] =
+const int32_t Theme::colors[static_cast<int32_t>(Theme::Color::Count)] =
 {
 	0x000000,
 	0x000000,
@@ -35,19 +35,16 @@ Theme::ThemeOptions Theme::m_theme = Theme::ThemeOptions::ThemeLilac;
 Theme::Theme() {}
 Theme::~Theme() {}
 
-ALLEGRO_COLOR Theme::getColor(int32_t index)
+ALLEGRO_COLOR Theme::getColor(Color color)
 {
-	if (index < 0 || index >= Theme::COLOR_COUNT)
-	{
-		return al_map_rgb(0, 255, 0);
-	}
+	int32_t c = static_cast<int32_t>(color);
 
-	if (index >= COLOR_X_FACE)
+	if (c >= static_cast<int32_t>(Color::FaceHuman))
 	{
-		return Theme::makeColor(Theme::colors[index]);
+		return Theme::makeColor(Theme::colors[c]);
 	}
 	
-	return Theme::makeColor((palette[int32_t(Theme::m_theme)])[index]);
+	return Theme::makeColor((palette[static_cast<int32_t>(Theme::m_theme)])[c]);
 }
 
 
@@ -63,8 +60,8 @@ void Theme::setTheme(ThemeOptions theme)
 
 void Theme::incTheme()
 {
-	int32_t t = int32_t(Theme::m_theme);
-	int32_t c = int32_t(Theme::ThemeOptions::ThemeCount);
+	int32_t t = static_cast<int32_t>(Theme::m_theme);
+	int32_t c = static_cast<int32_t>(Theme::ThemeOptions::ThemeCount);
 
 	++t;
 
@@ -78,8 +75,8 @@ void Theme::incTheme()
 
 void Theme::decTheme()
 {
-	int32_t t = int32_t(Theme::m_theme);
-	int32_t c = int32_t(Theme::ThemeOptions::ThemeCount);
+	int32_t t = static_cast<int32_t>(Theme::m_theme);
+	int32_t c = static_cast<int32_t>(Theme::ThemeOptions::ThemeCount);
 	
 	--t;
 
